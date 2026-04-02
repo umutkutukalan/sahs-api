@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
+import com.sahnesen.api.sahnesen.entities.model.UserPreferences;
 import com.sahnesen.api.sahnesen.entities.model.UserProfessional;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.enums.UserRole;
@@ -76,6 +77,10 @@ public class User {
     @Embedded
     @Builder.Default
     private UserProfessional professional = new UserProfessional();
+
+    @Embedded
+    @Builder.Default
+    private UserPreferences preferences = new UserPreferences();
 
     // Durum ve Konum Bilgileri
     private String city;
