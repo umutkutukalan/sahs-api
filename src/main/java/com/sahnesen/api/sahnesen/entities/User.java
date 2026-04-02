@@ -7,6 +7,7 @@ import java.util.Set;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
 import com.sahnesen.api.sahnesen.entities.model.UserPreferences;
 import com.sahnesen.api.sahnesen.entities.model.UserProfessional;
@@ -98,6 +99,18 @@ public class User {
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<SocialMediaPlatform> socialPlatforms = new HashSet<>();
+
+    // Bu kullanıcı kimleri takip ediyor?
+    @Builder.Default
+    @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private Set<Follow> following = new HashSet<>();
+
+    // Bu kullanıcıyı kimler takip ediyor?
+    @Builder.Default
+    @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private Set<Follow> followers = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
