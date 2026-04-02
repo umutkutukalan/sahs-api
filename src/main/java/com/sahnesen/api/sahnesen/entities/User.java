@@ -52,6 +52,12 @@ public class User {
     private String bio;
     private String motto;
 
+    // Görsel Alanlar
+    @Column(columnDefinition = "TEXT")
+    private String profileImg;
+    @Column(columnDefinition = "TEXT")
+    private String coverImg;
+
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
