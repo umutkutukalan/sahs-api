@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.enums.UserRole;
 
 import jakarta.persistence.Column;
@@ -51,8 +52,13 @@ public class User {
     private String bio;
     private String motto;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.USER;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    private AccountStatus accountStatus = AccountStatus.ACTIVE;
 
     // Durum ve Konum Bilgileri
     private String city;
