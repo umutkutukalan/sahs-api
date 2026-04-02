@@ -5,8 +5,12 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.sahnesen.api.sahnesen.enums.UserRole;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -46,6 +50,9 @@ public class User {
     private String surname;
     private String bio;
     private String motto;
+
+    @Enumerated(EnumType.STRING)
+    private UserRole role = UserRole.USER;
 
     // Durum ve Konum Bilgileri
     private String city;
