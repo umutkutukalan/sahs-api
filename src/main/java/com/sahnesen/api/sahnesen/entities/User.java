@@ -45,6 +45,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true)
+    private String googleId;
+
     // Temel Kimlik Bilgileri
     @Column(unique = true, nullable = false)
     private String slug;
