@@ -5,10 +5,12 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.enums.UserRole;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -65,6 +67,10 @@ public class User {
     @Builder.Default
     @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus = AccountStatus.ACTIVE;
+
+    @Embedded
+    @Builder.Default
+    private UserMetrics metrics = new UserMetrics();
 
     // Durum ve Konum Bilgileri
     private String city;
