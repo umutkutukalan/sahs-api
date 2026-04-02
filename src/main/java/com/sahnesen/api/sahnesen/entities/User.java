@@ -1,6 +1,8 @@
 package com.sahnesen.api.sahnesen.entities;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -11,6 +13,7 @@ import com.sahnesen.api.sahnesen.entities.model.UserProfessional;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.enums.UserRole;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -19,6 +22,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -89,6 +93,11 @@ public class User {
     @Builder.Default
     private boolean isVerified = false;
     private LocalDateTime lastLogin;
+
+    // İlişkiler (Önceki yapından devam edebilirsin)
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<SocialMediaPlatform> socialPlatforms = new HashSet<>();
 
     @CreationTimestamp
     private LocalDateTime createdAt;
