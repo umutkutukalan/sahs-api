@@ -22,6 +22,6 @@ public class UserRegisterRequest {
     private String username;
 
     @NotBlank(message = "Şifre alanı boş bırakılamaz")
-    @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")
+    @Size(min = 8, message = "Şifre en az 8 karakter olmalıdır")
     private String password;
 }
