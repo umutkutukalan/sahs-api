@@ -24,7 +24,8 @@ public class AuthController {
 
     // 🔐 Güvenli JWT Cookie oluşturma metodu
     private void setSecureJwtCookie(HttpServletResponse response, String token) {
-        System.out.println("Cookie ayarlanıyor - Token: " + token.substring(0, 20) + "...");
+        System.out.println("Cookie ayarlanıyor - Token: " +
+                (token.length() > 20 ? token.substring(0, 20) : token) + "...");
 
         Cookie jwtCookie = new Cookie("authToken", token);
         jwtCookie.setHttpOnly(true); // JavaScript ile erişilemez (XSS koruması)
