@@ -15,7 +15,11 @@ public class UserRegisterRequest {
 
     @NotBlank(message = "E-posta alanı boş bırakılamaz")
     @Email(message = "Geçerli bir e-posta adresi giriniz")
-    private String mail;
+    private String email;
+
+    @NotBlank(message = "Kullanıcı adı boş bırakılamaz")
+    @Size(min = 3, max = 20, message = "Kullanıcı adı 3-20 karakter arasında olmalıdır")
+    private String username;
 
     @NotBlank(message = "Şifre alanı boş bırakılamaz")
     @Size(min = 6, message = "Şifre en az 6 karakter olmalıdır")

@@ -11,5 +11,6 @@ public class ConfigLoader {
         System.setProperty("GOOGLE_CLIENT_ID", dotenv.get("GOOGLE_CLIENT_ID"));
         System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
         System.setProperty("GOOGLE_REDIRECT_URI", dotenv.get("GOOGLE_REDIRECT_URI"));
+        System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
     }
 }
