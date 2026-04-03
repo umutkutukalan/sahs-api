@@ -8,6 +8,7 @@ import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
+import com.sahnesen.api.sahnesen.request.UserLoginRequest;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
 import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.util.JwtUtil;
@@ -47,18 +48,8 @@ public class UserService {
         // 3. Veritabanına Yazma
         User savedUser = userRepository.save(user);
 
-        // 4. Entity -> DTO Dönüşümü (Manüel Mapper)
-        UserDTO userDto = UserDTO.builder()
-                .id(savedUser.getId())
-                .username(savedUser.getUsername())
-                .email(savedUser.getEmail())
-                .name(savedUser.getName())
-                .surname(savedUser.getSurname())
-                .slug(savedUser.getSlug())
-                .profileImg(savedUser.getProfileImg())
-                // Enum'ı String'e çeviriyoruz (.name() metodu ile)
-                .role(savedUser.getRole().name())
-                .build();
+        // 4. Entity -> DTO Dönüşümü
+        UserDTO userDto = convertToDto(savedUser);
 
         // 5. Token Üretimi ve Yanıt İnsası
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
@@ -68,4 +59,43 @@ public class UserService {
                 .token(token)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public AuthResponse login(UserLoginRequest request) {
+        // 1. Kullanıcıyı identifier (email veya username) üzerinden bul
+        User user = userRepository.findByEmail(request.getIdentifier())
+                .orElseGet(() -> userRepository.findByUsername(request.getIdentifier())
+                        .orElseThrow(() -> new RuntimeException("Kullanıcı adı/e-posta veya şifre hatalı")));
+
+        // 2. Şifre kontrolü
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new RuntimeException("Kullanıcı adı/e-posta veya şifre hatalı");
+        }
+
+        // 3. Token üretimi
+        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+
+        // 4. UserDTO'ya dönüştür ve Response oluştur
+        UserDTO userDTO = convertToDto(user);
+
+        return AuthResponse.builder()
+                .user(userDTO)
+                .token(token)
+                .build();
+    }
+
+    // Manuel Entity -> DTO dönüşüm metodu
+    private UserDTO convertToDto(User user) {
+        return UserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .slug(user.getSlug())
+                .profileImg(user.getProfileImg())
+                .role(user.getRole().name()) // Role Enum ise .name() ile String'e çeviriyoruz
+                .build();
+    }
+
 }

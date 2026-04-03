@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sahnesen.api.sahnesen.request.UserLoginRequest;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
 import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.services.UserService;
@@ -65,6 +66,21 @@ public class AuthController {
         registerResponse.setToken(null);
 
         return ResponseEntity.ok(registerResponse);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody UserLoginRequest request,
+            HttpServletResponse response) {
+        // Servis katmanında kullanıcıyı doğrula ve token üret
+        AuthResponse loginResponse = userService.login(request);
+
+        // Cookie ayarla
+        setSecureJwtCookie(response, loginResponse.getToken());
+
+        // Güvenlik için token'ı body'den temizle
+        loginResponse.setToken(null);
+
+        return ResponseEntity.ok(loginResponse);
     }
 
 }
