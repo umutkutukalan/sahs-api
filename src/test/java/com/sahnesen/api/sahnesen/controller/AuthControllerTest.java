@@ -2,7 +2,7 @@ package com.sahnesen.api.sahnesen.controller;
 
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
-import com.sahnesen.api.sahnesen.response.UserRegisterResponse;
+import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.services.UserService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -57,7 +57,7 @@ public class AuthControllerTest {
                 .email("umut@sahnesen.com")
                 .build();
 
-        UserRegisterResponse mockResponse = UserRegisterResponse.builder()
+        AuthResponse mockResponse = AuthResponse.builder()
                 .user(userDTO)
                 .token("mock-jwt-token")
                 .build();

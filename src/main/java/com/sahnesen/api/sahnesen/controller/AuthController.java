@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
-import com.sahnesen.api.sahnesen.response.UserRegisterResponse;
+import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.services.UserService;
 
 import jakarta.servlet.http.Cookie;
@@ -56,7 +56,7 @@ public class AuthController {
     public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequest request, HttpServletResponse response) {
 
         // try-catch yok! Hata olursa otomatik olarak GlobalExceptionHandler'a gider.
-        UserRegisterResponse registerResponse = userService.register(request);
+        AuthResponse registerResponse = userService.register(request);
 
         // Cookie olarak token'ı ayarla
         setSecureJwtCookie(response, registerResponse.getToken());

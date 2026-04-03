@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRegisterResponse {
+public class AuthResponse {
     private UserDTO user; // Entity yerine Dto
     private String token;
 }

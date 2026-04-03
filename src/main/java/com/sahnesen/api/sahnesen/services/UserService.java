@@ -9,7 +9,7 @@ import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
-import com.sahnesen.api.sahnesen.response.UserRegisterResponse;
+import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.util.JwtUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
     @Transactional
-    public UserRegisterResponse register(UserRegisterRequest request) {
+    public AuthResponse register(UserRegisterRequest request) {
         // 1. Güvenlik Kontrolü: Eskiden findAll kullanıyordun, şimdi exists
         // kullanıyoruz
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -63,7 +63,7 @@ public class UserService {
         // 5. Token Üretimi ve Yanıt İnsası
         String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
 
-        return UserRegisterResponse.builder()
+        return AuthResponse.builder()
                 .user(userDto)
                 .token(token)
                 .build();

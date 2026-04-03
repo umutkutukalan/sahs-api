@@ -20,7 +20,7 @@ import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.UserRole;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
-import com.sahnesen.api.sahnesen.response.UserRegisterResponse;
+import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.services.UserService;
 import com.sahnesen.api.sahnesen.util.JwtUtil;
 
@@ -69,7 +69,7 @@ public class UserServiceTest {
         when(jwtUtil.generateToken(anyString(), anyString())).thenReturn("mocked_token");
 
         // WHEN (AKSIYON)
-        UserRegisterResponse response = userService.register(request);
+        AuthResponse response = userService.register(request);
 
         // THEN (DOĞRULAMA)
         assertNotNull(response);
