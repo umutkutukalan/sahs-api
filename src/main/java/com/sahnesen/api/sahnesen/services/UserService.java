@@ -7,9 +7,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
+import com.sahnesen.api.sahnesen.enums.ThemeType;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.request.UserLoginRequest;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
+import com.sahnesen.api.sahnesen.request.UserUpdateRequest;
 import com.sahnesen.api.sahnesen.response.AuthResponse;
 import com.sahnesen.api.sahnesen.util.JwtUtil;
 
@@ -98,4 +100,69 @@ public class UserService {
                 .build();
     }
 
+    @Transactional
+    public UserDTO updateMyProfile(String email, UserUpdateRequest request) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        // 1. Temel Alanlar
+        if (request.getName() != null)
+            user.setName(request.getName());
+        if (request.getSurname() != null)
+            user.setSurname(request.getSurname());
+        if (request.getBio() != null)
+            user.setBio(request.getBio());
+        if (request.getMotto() != null)
+            user.setMotto(request.getMotto());
+        if (request.getProfileImg() != null)
+            user.setProfileImg(request.getProfileImg());
+        if (request.getCoverImg() != null)
+            user.setCoverImg(request.getCoverImg());
+        if (request.getCity() != null)
+            user.setCity(request.getCity());
+        if (request.getDistrict() != null)
+            user.setDistrict(request.getDistrict());
+
+        // 2. Username ve Slug (Önemli: Linkler değişeceği için dikkatli güncellenmeli)
+        if (request.getUsername() != null && !request.getUsername().isEmpty()) {
+            String newUsername = request.getUsername().toLowerCase();
+            if (!newUsername.equals(user.getUsername())) {
+                if (userRepository.existsByUsername(newUsername)) {
+                    throw new RuntimeException("Bu kullanıcı adı zaten alınmış.");
+                }
+                user.setUsername(newUsername);
+                user.setSlug(newUsername); // Username değişince slug da güncellenir
+            }
+        }
+
+        // 3. Profesyonel Bilgiler (Embedded Update)
+        if (request.getProfessional() != null) {
+            var profReq = request.getProfessional();
+            var prof = user.getProfessional();
+            if (profReq.getJob() != null)
+                prof.setJob(profReq.getJob());
+            if (profReq.getAvailableFor() != null)
+                prof.setAvailableFor(profReq.getAvailableFor());
+            if (profReq.getPortfolioUrl() != null)
+                prof.setPortfolioUrl(profReq.getPortfolioUrl());
+            if (profReq.getSkills() != null)
+                prof.setSkills(profReq.getSkills());
+        }
+
+        // 4. Tercihler (Embedded Update)
+        if (request.getPreferences() != null) {
+            var prefReq = request.getPreferences();
+            var pref = user.getPreferences();
+            if (prefReq.getTheme() != null)
+                pref.setTheme(ThemeType.valueOf(prefReq.getTheme().toUpperCase()));
+            if (prefReq.getIsPrivate() != null)
+                pref.setPrivate(prefReq.getIsPrivate());
+            if (prefReq.getAllowDirectMessages() != null)
+                pref.setAllowDirectMessages(prefReq.getAllowDirectMessages());
+            if (prefReq.getLanguage() != null)
+                pref.setLanguage(prefReq.getLanguage());
+        }
+
+        return convertToDto(userRepository.save(user));
+    }
 }
