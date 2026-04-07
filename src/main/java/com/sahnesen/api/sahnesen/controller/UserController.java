@@ -1,5 +1,8 @@
 package com.sahnesen.api.sahnesen.controller;
 
+import java.security.Principal;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -23,10 +26,15 @@ public class UserController {
 
     // Kendi profilini güncelle
     @PutMapping("/me")
-    public ResponseEntity<UserDTO> updateMyProfile(@Valid @RequestBody UserUpdateRequest updateRequest) {
-        String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
-        UserDTO updatedUser = userService.updateMyProfile(email, updateRequest);
+    public ResponseEntity<UserDTO> updateMyProfile(@Valid @RequestBody UserUpdateRequest updateRequest,
+            Principal principal) {
+
+        if (principal == null) {
+            // Eğer hala null geliyorsa, güvenlik katmanında bir sızıntı var demektir
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        UserDTO updatedUser = userService.updateMyProfile(principal.getName(), updateRequest);
         return ResponseEntity.ok(updatedUser);
     }
 }
