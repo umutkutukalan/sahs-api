@@ -43,7 +43,7 @@ public class UserControllerTest {
     private UserUpdateRequest validUpdateRequest;
 
     @Test
-    @WithMockUser(username = "umut@sahnesen.com")
+    @WithMockUser(username = "umutkutukalan")
     void shouldUpdateProfileSuccessfully() throws Exception {
         // GIVEN
         UserUpdateRequest updateRequest = new UserUpdateRequest();
@@ -57,7 +57,7 @@ public class UserControllerTest {
                 .build();
 
         // UserService'in bu isteğe nasıl cevap vereceğini taklit ediyoruz
-        when(userService.updateMyProfile(eq("umut@sahnesen.com"), any(UserUpdateRequest.class)))
+        when(userService.updateMyProfile(eq("umutkutukalan"), any(UserUpdateRequest.class)))
                 .thenReturn(updatedUserDTO);
 
         // WHEN & THEN
@@ -66,7 +66,8 @@ public class UserControllerTest {
                 .content(objectMapper.writeValueAsString(updatedUserDTO)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Umut Güncel"));
+                .andExpect(jsonPath("$.name").value("Umut Güncel"))
+                .andExpect(jsonPath("$.username").value("umutkutukalan"));
     }
 
 }

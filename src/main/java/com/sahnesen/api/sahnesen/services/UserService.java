@@ -101,8 +101,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO updateMyProfile(String email, UserUpdateRequest request) {
-        User user = userRepository.findByEmail(email)
+    public UserDTO updateMyProfile(String username, UserUpdateRequest request) {
+        User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
         // 1. Temel Alanlar
