@@ -63,7 +63,7 @@ public class UserControllerTest {
         // WHEN & THEN
         mockMvc.perform(put("/api/users/me").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(updatedUserDTO)))
+                .content(objectMapper.writeValueAsString(updateRequest)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Umut Güncel"))
