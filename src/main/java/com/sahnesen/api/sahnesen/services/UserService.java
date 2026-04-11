@@ -54,7 +54,7 @@ public class UserService {
         UserDTO userDto = convertToDto(savedUser);
 
         // 5. Token Üretimi ve Yanıt İnsası
-        String token = jwtUtil.generateToken(savedUser.getEmail(), savedUser.getRole().name());
+        String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole().name());
 
         return AuthResponse.builder()
                 .user(userDto)
@@ -75,7 +75,7 @@ public class UserService {
         }
 
         // 3. Token üretimi
-        String token = jwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
 
         // 4. UserDTO'ya dönüştür ve Response oluştur
         UserDTO userDTO = convertToDto(user);
