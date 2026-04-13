@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.sahnesen.api.sahnesen.config.SecurityConfig;
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.request.UserUpdateRequest;
+import com.sahnesen.api.sahnesen.services.SocialMediaService;
 import com.sahnesen.api.sahnesen.services.UserService;
 
 import tools.jackson.databind.ObjectMapper;
@@ -39,6 +40,9 @@ public class UserControllerTest {
 
     @MockitoBean
     private UserService userService; // UserService'i mocklamak için
+    
+    @MockitoBean
+    private SocialMediaService socialMediaService; // SocialMediaService'i mocklamak için
 
     private UserUpdateRequest validUpdateRequest;
 
