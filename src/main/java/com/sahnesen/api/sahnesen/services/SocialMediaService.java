@@ -60,4 +60,11 @@ public class SocialMediaService {
         socialMediaPlatformRepository.delete(platform);
     }
 
+    // ---
+
+    @Transactional(readOnly = true)
+    public List<SocialMediaPlatform> getPublicPlatformsByUsername(String username) {
+        return socialMediaPlatformRepository.findAllByUser_UsernameAndIsPublicTrue(username);
+    }
+
 }
