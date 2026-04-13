@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
@@ -40,6 +42,21 @@ public class PostService {
                 .build();
 
         return postRepository.save(post);
+    }
+
+    // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını görmesi için
+    public Page<Post> getMyOwnPosts(String username, Pageable pageable) {
+        return postRepository.findAllByUser_UsernameOrderByCreatedAtDesc(username, pageable);
+    }
+
+    // ----
+
+    public Page<Post> getAllPublishedPosts(Pageable pageable) {
+        return postRepository.findAllByIsPublishedTrueOrderByCreatedAtDesc(pageable);
+    }
+
+    public Page<Post> getUserPosts(String username, Pageable pageable) {
+        return postRepository.findAllByUser_UsernameAndIsPublishedTrueOrderByCreatedAtDesc(username, pageable);
     }
 
 }
