@@ -9,6 +9,7 @@ import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
+import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.util.SlugUtil;
 
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
 
-    public Post createPost(String username, PostRequestDTO request) {
+    public PostResponse createPost(String username, PostRequestDTO request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
@@ -41,22 +42,49 @@ public class PostService {
                 .isPublished(request.isPublished())
                 .build();
 
-        return postRepository.save(post);
+        return convertToResponse(postRepository.save(post));
     }
 
-    // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını görmesi için
-    public Page<Post> getMyOwnPosts(String username, Pageable pageable) {
-        return postRepository.findAllByUser_UsernameOrderByCreatedAtDesc(username, pageable);
+    // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
+    // görmesi için
+    public Page<PostResponse> getMyOwnPosts(String username, Pageable pageable) {
+        return postRepository.findAllByUser_UsernameOrderByCreatedAtDesc(username, pageable)
+                .map(this::convertToResponse);
     }
 
     // ----
 
-    public Page<Post> getAllPublishedPosts(Pageable pageable) {
-        return postRepository.findAllByIsPublishedTrueOrderByCreatedAtDesc(pageable);
+    // Genel Akış (Herkes görebilir)
+    public Page<PostResponse> getAllPublishedPosts(Pageable pageable) {
+        return postRepository.findAllByIsPublishedTrueOrderByCreatedAtDesc(pageable).map(this::convertToResponse);
     }
 
-    public Page<Post> getUserPosts(String username, Pageable pageable) {
-        return postRepository.findAllByUser_UsernameAndIsPublishedTrueOrderByCreatedAtDesc(username, pageable);
+    // Profil sayfası için, sadece o kullanıcıya ait ve yayınlanmış postları getir
+    public Page<PostResponse> getUserPosts(String username, Pageable pageable) {
+        return postRepository.findAllByUser_UsernameAndIsPublishedTrueOrderByCreatedAtDesc(username, pageable)
+                .map(this::convertToResponse);
+    }
+
+    public PostResponse getPostBySlug(String slug) {
+        Post post = postRepository.findBySlugAndIsPublishedTrue(slug)
+                .orElseThrow(() -> new RuntimeException("Yazı bulunamadı veya henüz yayınlanmadı."));
+        return convertToResponse(post);
+    }
+
+    private PostResponse convertToResponse(Post post) {
+        return PostResponse.builder()
+                .id(post.getId())
+                .title(post.getTitle())
+                .slug(post.getSlug())
+                .content(post.getContent())
+                .coverImage(post.getCoverImage())
+                .postType(post.getPostType())
+                .createdAt(post.getCreatedAt())
+                .authorName(post.getUser().getName())
+                .authorSurname(post.getUser().getSurname())
+                .authorUsername(post.getUser().getUsername())
+                .authorProfileImg(post.getUser().getProfileImg())
+                .build();
     }
 
 }

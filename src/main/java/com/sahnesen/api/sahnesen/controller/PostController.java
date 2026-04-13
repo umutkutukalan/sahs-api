@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.entities.Post;
+import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.PostService;
 
 import jakarta.validation.Valid;
@@ -32,10 +33,10 @@ public class PostController {
      * Sadece giriş yapmış kullanıcılar kendi adlarına post oluşturabilir.
      */
     @PostMapping("/me")
-    public ResponseEntity<Post> createMyPost(
+    public ResponseEntity<PostResponse> createMyPost(
             @Valid @RequestBody PostRequestDTO request,
             Principal principal) {
-        Post savedPost = postService.createPost(principal.getName(), request);
+        PostResponse savedPost = postService.createPost(principal.getName(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
     }
 
@@ -43,24 +44,29 @@ public class PostController {
     // görmesi için
 
     @GetMapping("/me")
-    public ResponseEntity<Page<Post>> getMyAllPosts(Principal principal, Pageable pageable) {
+    public ResponseEntity<Page<PostResponse>> getMyAllPosts(Principal principal, Pageable pageable) {
         return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), pageable));
     }
 
     // ----
 
-    // 1. Genel Akış (Herkes görebilir)
+    // Genel Akış (Herkes görebilir)
     @GetMapping
-    public ResponseEntity<Page<Post>> getAllPosts(Pageable pageable) {
+    public ResponseEntity<Page<PostResponse>> getAllPosts(Pageable pageable) {
         return ResponseEntity.ok(postService.getAllPublishedPosts(pageable));
     }
 
-    // 2. Kullanıcıya Özel Akış (Profil sayfası için)
+    // Kullanıcıya Özel Akış (Profil sayfası için)
     @GetMapping("/user/{username}")
-    public ResponseEntity<Page<Post>> getUserPosts(
+    public ResponseEntity<Page<PostResponse>> getUserPosts(
             @PathVariable String username,
             Pageable pageable) {
         return ResponseEntity.ok(postService.getUserPosts(username, pageable));
+    }
+
+    @GetMapping("/{slug}")
+    public ResponseEntity<PostResponse> getPostDetail(@PathVariable String slug) {
+        return ResponseEntity.ok(postService.getPostBySlug(slug));
     }
 
 }

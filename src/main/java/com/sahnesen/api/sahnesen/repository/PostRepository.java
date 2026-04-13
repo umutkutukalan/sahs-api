@@ -21,6 +21,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     Optional<Post> findBySlug(String slug);
 
+    Optional<Post> findBySlugAndIsPublishedTrue(String slug);
+
     // Slug çakışması var mı kontrolü
     boolean existsBySlug(String slug);
 }
