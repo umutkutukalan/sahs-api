@@ -52,6 +52,23 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
+    public PostResponse updatePost(String username, Long postId, PostRequestDTO request) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
+        }
+
+        post.setTitle(request.getTitle());
+        post.setContent(request.getContent());
+        post.setCoverImage(request.getCoverImage());
+        post.setPostType(request.getPostType());
+        post.setPublished(request.isPublished());
+
+        return convertToResponse(postRepository.save(post));
+    }
+
     // ----
 
     // Genel Akış (Herkes görebilir)
