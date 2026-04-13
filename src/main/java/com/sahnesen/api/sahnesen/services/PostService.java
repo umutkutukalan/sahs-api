@@ -69,6 +69,18 @@ public class PostService {
         return convertToResponse(postRepository.save(post));
     }
 
+    public void deletePost(String username, Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Silinmek istenen post bulunamadı"));
+        postRepository.delete(post);
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu postu silme yetkiniz yok");
+        }
+
+        postRepository.delete(post);
+    }
+
     // ----
 
     // Genel Akış (Herkes görebilir)
