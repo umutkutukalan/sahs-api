@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.response;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.sahnesen.api.sahnesen.enums.PostType;
@@ -9,7 +10,10 @@ import lombok.Data;
 
 @Data
 @Builder
-public class PostResponse {
+public class PostResponse implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private Long id;
     private String title;
     private String slug;
