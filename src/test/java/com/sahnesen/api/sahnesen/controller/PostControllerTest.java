@@ -8,10 +8,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
-import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.PostService;
+
+import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -22,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(PostController.class)
 public class PostControllerTest {
@@ -50,7 +50,8 @@ public class PostControllerTest {
                 .title("Test Başlığı")
                 .slug("test-basligi")
                 .postType(PostType.STUDY)
-                .isPublished(true)
+                .authorName("Umut")
+                .authorUsername("umutkutukalan")
                 .build();
 
         when(postService.createPost(eq("umutkutukalan"), any(PostRequestDTO.class)))
@@ -64,6 +65,8 @@ public class PostControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.slug").value("test-basligi"))
-                .andExpect(jsonPath("$.postType").value("STUDY"));
+                .andExpect(jsonPath("$.postType").value("STUDY"))
+                .andExpect(jsonPath("$.authorName").value("Umut"))
+                .andExpect(jsonPath("$.authorUsername").value("umutkutukalan"));
     }
 }
