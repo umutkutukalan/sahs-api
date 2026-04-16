@@ -20,6 +20,7 @@ import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.request.UserUpdateRequest;
 import com.sahnesen.api.sahnesen.services.SocialMediaService;
 import com.sahnesen.api.sahnesen.services.UserService;
+import com.sahnesen.api.sahnesen.util.JwtUtil;
 
 import tools.jackson.databind.ObjectMapper;
 
@@ -43,6 +44,9 @@ public class UserControllerTest {
     
     @MockitoBean
     private SocialMediaService socialMediaService; // SocialMediaService'i mocklamak için
+
+    @MockitoBean
+    private JwtUtil jwtUtil; // JWT token oluşturmak için (eğer ihtiyaç olursa)
 
     private UserUpdateRequest validUpdateRequest;
 
