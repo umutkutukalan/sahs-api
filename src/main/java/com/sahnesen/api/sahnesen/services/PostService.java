@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.services;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -94,7 +95,13 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
+    @Cacheable(value = "postBySlug", key = "#slug")
     public PostResponse getPostBySlug(String slug) {
+        // Bu metodun içine sadece ilk seferde girecek
+        // Sonraki isteklerde Spring, Redis'e bakıp sonucu oradan dönecek
+
+        System.out.println("Veritabanına gidiliyor: " + slug); // Cache mekanizmasının çalıştığını görmek için log ekleyelim
+
         Post post = postRepository.findBySlugAndIsPublishedTrue(slug)
                 .orElseThrow(() -> new RuntimeException("Yazı bulunamadı veya henüz yayınlanmadı."));
         return convertToResponse(post);
