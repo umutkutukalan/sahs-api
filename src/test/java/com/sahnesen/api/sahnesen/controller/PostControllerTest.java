@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.enums.PostType;
+import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.PostService;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -44,7 +45,7 @@ public class PostControllerTest {
         request.setPostType(PostType.STUDY);
         request.setPublished(true);
 
-        Post savedPost = Post.builder()
+        PostResponse savedPost = PostResponse.builder()
                 .id(1L)
                 .title("Test Başlığı")
                 .slug("test-basligi")

@@ -1,3 +1,4 @@
+
 package com.sahnesen.api.sahnesen.response;
 
 import java.io.Serializable;
@@ -5,11 +6,15 @@ import java.time.LocalDateTime;
 
 import com.sahnesen.api.sahnesen.enums.PostType;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
+@NoArgsConstructor //Jackson için boş constructor
+@AllArgsConstructor  //Builder için tüm argümanları içeren constructor
 public class PostResponse implements Serializable {
 
     private static final long serialVersionUID = 1L;
