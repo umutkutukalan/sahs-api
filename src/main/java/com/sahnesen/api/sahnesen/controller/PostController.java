@@ -1,6 +1,7 @@
 package com.sahnesen.api.sahnesen.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
@@ -84,6 +86,11 @@ public class PostController {
     @GetMapping("/{slug}")
     public ResponseEntity<PostResponse> getPostDetail(@PathVariable String slug) {
         return ResponseEntity.ok(postService.getPostBySlug(slug));
+    }
+
+    @GetMapping("/trending")
+    public ResponseEntity<List<String>> getTrendingPosts(@RequestParam(defaultValue = "5") int limit) {
+        return ResponseEntity.ok(postService.getTopPosts(limit));
     }
 
 }
