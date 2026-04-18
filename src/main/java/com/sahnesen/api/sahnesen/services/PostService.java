@@ -1,8 +1,10 @@
 package com.sahnesen.api.sahnesen.services;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
@@ -21,6 +23,8 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+
+    private final StringRedisTemplate redisTemplate; // Redis işlemleri için ekliyoruz
 
     public PostResponse createPost(String username, PostRequestDTO request) {
         User user = userRepository.findByUsername(username)
@@ -53,6 +57,7 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
+    @CacheEvict(value = "postBySlug", key = "#result.slug") // Güncellenen postun slug'ını cache'den sil
     public PostResponse updatePost(String username, Long postId, PostRequestDTO request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
@@ -100,7 +105,8 @@ public class PostService {
         // Bu metodun içine sadece ilk seferde girecek
         // Sonraki isteklerde Spring, Redis'e bakıp sonucu oradan dönecek
 
-        System.out.println("Veritabanına gidiliyor: " + slug); // Cache mekanizmasının çalıştığını görmek için log ekleyelim
+        System.out.println("Veritabanına gidiliyor: " + slug); // Cache mekanizmasının çalıştığını görmek için log
+                                                               // ekleyelim
 
         Post post = postRepository.findBySlugAndIsPublishedTrue(slug)
                 .orElseThrow(() -> new RuntimeException("Yazı bulunamadı veya henüz yayınlanmadı."));
