@@ -26,6 +26,8 @@ public class PostService {
 
     private final StringRedisTemplate redisTemplate; // Redis işlemleri için ekliyoruz
 
+    private static final String TRENDING_KEY = "posts:trending";
+
     public PostResponse createPost(String username, PostRequestDTO request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
@@ -111,6 +113,23 @@ public class PostService {
         Post post = postRepository.findBySlugAndIsPublishedTrue(slug)
                 .orElseThrow(() -> new RuntimeException("Yazı bulunamadı veya henüz yayınlanmadı."));
         return convertToResponse(post);
+    }
+
+    public PostResponse getPostWithViewCount(String slug) {
+        /**
+         * Bu metodun amacı, bir yazıya erişildiğinde o yazının görüntülenme sayısını
+         * artırmak ve güncel görüntülenme sayısını döndürmektir. Redis'te her yazı için
+         * bir anahtar (key) oluşturacağız ve bu anahtar altında görüntülenme sayısını
+         * saklayacağız. Her yazıya erişildiğinde bu sayıyı artıracağız ve güncel sayıyı
+         * döndüreceğiz. (ZINCRBY komutu ile) Ayrıca, yazının kendisini de
+         * veritabanından çekip döndüreceğiz. Böylece, yazıya erişildiğinde hem yazının
+         * içeriği hem de güncel görüntülenme sayısı sağlanmış olacak.
+         */
+        redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1); // Görüntülenme sayısını artır
+
+        // Sonra normal akışa devam ediyoruz, mevcut cache'li metodu çağırarak yazıyı çekiyoruz
+        return getPostBySlug(slug);
+
     }
 
     private PostResponse convertToResponse(Post post) {
