@@ -85,7 +85,7 @@ public class PostController {
 
     @GetMapping("/{slug}")
     public ResponseEntity<PostResponse> getPostDetail(@PathVariable String slug) {
-        return ResponseEntity.ok(postService.getPostBySlug(slug));
+        return ResponseEntity.ok(postService.getPostWithViewCount(slug));
     }
 
     @GetMapping("/trending")
