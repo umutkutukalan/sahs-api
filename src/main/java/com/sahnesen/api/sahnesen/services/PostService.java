@@ -1,5 +1,10 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -127,9 +132,17 @@ public class PostService {
          */
         redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1); // Görüntülenme sayısını artır
 
-        // Sonra normal akışa devam ediyoruz, mevcut cache'li metodu çağırarak yazıyı çekiyoruz
+        // Sonra normal akışa devam ediyoruz, mevcut cache'li metodu çağırarak yazıyı
+        // çekiyoruz
         return getPostBySlug(slug);
 
+    }
+
+    public List<String> getTopPosts(int limit) {
+        // ZREVRANGE komutu ile TRENDING_KEY altında en yüksek skora sahip ilk 'limit'
+        // kadar slug'ı çekiyoruz
+        Set<String> range = redisTemplate.opsForZSet().reverseRange(TRENDING_KEY, 0, limit - 1);
+        return new ArrayList<>(range != null ? range : Collections.emptyList());
     }
 
     private PostResponse convertToResponse(Post post) {
