@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.entities.Post;
@@ -107,6 +108,7 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "postBySlug", key = "#slug")
     public PostResponse getPostBySlug(String slug) {
         // Bu metodun içine sadece ilk seferde girecek

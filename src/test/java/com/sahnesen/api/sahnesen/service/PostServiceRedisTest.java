@@ -2,6 +2,12 @@ package com.sahnesen.api.sahnesen.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +26,6 @@ import com.sahnesen.api.sahnesen.util.SlugUtil;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Transactional // Session'un test sonuna kadar açık kalmasını sağlar, böylece lazy loading
-               // çalışır
 public class PostServiceRedisTest {
 
     @Autowired
@@ -71,7 +75,15 @@ public class PostServiceRedisTest {
         this.dynamicSlug = savedPost.getSlug(); // Kaydedilen postun slug'ını alıyoruz
     }
 
+    @AfterEach
+    void tearDown() {
+        postRepository.deleteAll();
+        userRepository.deleteAll();
+        redisTemplate.delete(TRENDING_KEY); // Test sonrası Redis'teki ilgili key'i temizle
+    }
+
     @Test
+    @Transactional
     void shouldIncrementViewCountingRedisCorrectly() {
         // İlk İzlenme
         postService.getPostWithViewCount(dynamicSlug);
@@ -84,4 +96,27 @@ public class PostServiceRedisTest {
         assertEquals(2.0, score, "İkinci izlemede skor 2 olmalı");
     }
 
+    @Test
+    void shouldHandleConcurrentViewIncrements() throws InterruptedException {
+        int numberOfThreads = 500; // 50 eşzamanlı istek
+        ExecutorService service = Executors.newFixedThreadPool(10);
+        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+
+        for (int i = 0; i < numberOfThreads; i++) {
+            service.execute(() -> {
+                try {
+                    postService.getPostWithViewCount(dynamicSlug);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        latch.await();
+
+        Double finalScore = redisTemplate.opsForZSet().score(TRENDING_KEY, dynamicSlug);
+        assertEquals(500.0, finalScore, "50 eşzamanlı izlenmeden sonra skor 500 olmalı");
+
+        service.shutdown();
+
+    }
 }
