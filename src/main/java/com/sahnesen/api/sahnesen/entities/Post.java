@@ -60,6 +60,9 @@ public class Post {
     @Builder.Default
     private boolean isPublished = false;
 
+    @Column(name = "view_count")
+    private Long viewCount = 0L;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

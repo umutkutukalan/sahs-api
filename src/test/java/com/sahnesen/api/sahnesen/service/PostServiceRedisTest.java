@@ -3,7 +3,6 @@ package com.sahnesen.api.sahnesen.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -114,7 +113,7 @@ public class PostServiceRedisTest {
         latch.await();
 
         Double finalScore = redisTemplate.opsForZSet().score(TRENDING_KEY, dynamicSlug);
-        assertEquals(500.0, finalScore, "50 eşzamanlı izlenmeden sonra skor 500 olmalı");
+        assertEquals(500.0, finalScore, "500 eşzamanlı izlenmeden sonra skor 500 olmalı");
 
         service.shutdown();
 
