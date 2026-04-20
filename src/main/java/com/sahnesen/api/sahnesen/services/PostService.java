@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,8 @@ public class PostService {
     private final StringRedisTemplate redisTemplate; // Redis işlemleri için ekliyoruz
 
     private static final String TRENDING_KEY = "posts:trending";
+
+    private final SimpMessagingTemplate messagingTemplate; // WebSocket üzerinden mesaj göndermek için
 
     public PostResponse createPost(String username, PostRequestDTO request) {
         User user = userRepository.findByUsername(username)
@@ -132,7 +135,10 @@ public class PostService {
          * veritabanından çekip döndüreceğiz. Böylece, yazıya erişildiğinde hem yazının
          * içeriği hem de güncel görüntülenme sayısı sağlanmış olacak.
          */
-        redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1); // Görüntülenme sayısını artır
+        Double newScore = redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1); // Görüntülenme sayısını
+                                                                                            // artır
+
+        messagingTemplate.convertAndSend("/topic/post-views/" + slug, newScore.longValue());
 
         // Sonra normal akışa devam ediyoruz, mevcut cache'li metodu çağırarak yazıyı
         // çekiyoruz
