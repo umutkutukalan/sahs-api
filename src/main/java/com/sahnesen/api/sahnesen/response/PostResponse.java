@@ -26,6 +26,7 @@ public class PostResponse implements Serializable {
     private String coverImage;
     private PostType postType;
     private LocalDateTime createdAt;
+    private Long viewCount; // Görüntülenme sayısı, Redis'ten çekilecek
 
     // Yazar Bilgileri (Sadece gerekli olanlar)
     private String authorName;

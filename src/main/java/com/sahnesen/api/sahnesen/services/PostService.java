@@ -135,15 +135,15 @@ public class PostService {
          * veritabanından çekip döndüreceğiz. Böylece, yazıya erişildiğinde hem yazının
          * içeriği hem de güncel görüntülenme sayısı sağlanmış olacak.
          */
-        Double newScore = redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1); // Görüntülenme sayısını
-                                                                                            // artır
 
+        // Görüntülenme sayısını artır
+        Double newScore = redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1);
         messagingTemplate.convertAndSend("/topic/post-views/" + slug, newScore.longValue());
 
-        // Sonra normal akışa devam ediyoruz, mevcut cache'li metodu çağırarak yazıyı
-        // çekiyoruz
-        return getPostBySlug(slug);
+        PostResponse postResponse = getPostBySlug(slug);
+        postResponse.setViewCount(newScore.longValue()); // Frontend'e de güncel görüntülenme sayısını döndürmek için PostResponse'a ekleyelim
 
+        return postResponse;
     }
 
     public List<String> getTopPosts(int limit) {
