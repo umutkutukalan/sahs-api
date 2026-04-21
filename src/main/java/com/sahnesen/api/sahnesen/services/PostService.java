@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -22,11 +24,15 @@ import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.util.SlugUtil;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class PostService {
+
+    @Autowired
+    private HttpServletRequest request; // WebSocket bağlantısında kullanmak üzere ekliyoruz
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
@@ -136,12 +142,32 @@ public class PostService {
          * içeriği hem de güncel görüntülenme sayısı sağlanmış olacak.
          */
 
-        // Görüntülenme sayısını artır
-        Double newScore = redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1);
-        messagingTemplate.convertAndSend("/topic/post-views/" + slug, newScore.longValue());
+        long currentViewCount;
 
+        // 1. Rate Limit Kontrolü: Eğer bu IP son 10 dk içinde bu yazıya bakmadıysa
+        if (isEligibleToIncreaseView(slug)) {
+            // Skoru 1 artır ve yeni skoru al
+            Double newScore = redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1);
+            currentViewCount = (newScore != null) ? newScore.longValue() : 1L;
+
+            // WebSocket üzerinden TÜM abonelere "Yeni sayı bu!" diye uçur
+            messagingTemplate.convertAndSend("/topics/post-views/" + slug, currentViewCount);
+
+            System.out.println("İzlenme arttırıldı. Yeni sayı: " + currentViewCount);
+        } else {
+            // Eğer IP kilitliyse (Limit takıldıysa), sadece mevcut skoru oku (artırma
+            // yapma)
+            Double currentScore = redisTemplate.opsForZSet().score(TRENDING_KEY, slug);
+            currentViewCount = (currentScore != null) ? currentScore.longValue() : 0L;
+
+            System.out.println("Rate Limit devrede. Mevcut sayı dönülüyor: " + currentViewCount);
+        }
+
+        // 2. Post verisini getir (DB veya Cache'den)
         PostResponse postResponse = getPostBySlug(slug);
-        postResponse.setViewCount(newScore.longValue()); // Frontend'e de güncel görüntülenme sayısını döndürmek için PostResponse'a ekleyelim
+
+        // 3. Güncel izlenme sayısını response içine set et
+        postResponse.setViewCount(currentViewCount);
 
         return postResponse;
     }
@@ -169,4 +195,24 @@ public class PostService {
                 .build();
     }
 
+    // ----
+
+    private boolean isEligibleToIncreaseView(String slug) {
+        // 1. IP Adresini Al (Proxy arkasındaysa X-Forwarded-For'a bak)
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty()) {
+            ip = request.getRemoteAddr();
+        }
+
+        // 2. Redis için benzersiz bir anahtar üret
+        String lockKey = "view_lock:" + slug + ":" + ip;
+
+        // 3. Bu anahtar Redis'te var mı? (setIfAbsent atomik bir işlemdir)
+        // Eğer yoksa "1" değerini set eder ve 10 dakika TTL koyar, true döner.
+        // Eğer varsa hiçbir şey yapamaz ve false döner.
+        Boolean isNewVisit = redisTemplate.opsForValue()
+                .setIfAbsent(lockKey, "1", 10, TimeUnit.MINUTES);
+        return Boolean.TRUE.equals(isNewVisit);
+
+    }
 }
