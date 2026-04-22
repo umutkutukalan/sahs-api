@@ -52,6 +52,10 @@ public class SecurityConfig {
                         "/musics/**"
                 ).permitAll()
 
+                // 🤝 FOLLOW SYSTEM
+                .requestMatchers(HttpMethod.GET, "/api/follows/counts/**").permitAll()
+                .requestMatchers("/api/follows/**").authenticated()
+
                 // 🔓 PREFLIGHT (CORS)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
