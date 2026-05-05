@@ -1,6 +1,7 @@
 package com.sahnesen.api.sahnesen.controller;
 
 import java.security.Principal;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -61,5 +62,14 @@ public class FollowController {
         String followerUsername = principal.getName();
         followService.unfollowUser(followerUsername, followingId);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 📊 Takipçi ve takip edilen sayılarını getir
+     * Bu endpoint public olabilir, profil sayfasında herkes görebilir.
+     */
+    @GetMapping("/stats/{username}")
+    public ResponseEntity<Map<String, Long>> getFollowStats(@PathVariable String username) {
+        return ResponseEntity.ok(followService.getFollowStats(username));
     }
 }
