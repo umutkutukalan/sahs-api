@@ -1,39 +1,51 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.entities.User;
+import com.sahnesen.api.sahnesen.enums.BadgeCategory;
 import com.sahnesen.api.sahnesen.enums.BadgeType;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BadgeService {
 
     private final UserRepository userRepository;
 
     @Transactional
-    public void checkAndAssignBadges(Long userId, Integer currentFollowerCount) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+    public void checkAndAssignBadges(Long userId, BadgeCategory category, int score) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
 
         Set<BadgeType> currentBadges = user.getMetrics().getBadges();
         boolean isUpdated = false;
 
-        for (BadgeType badge : BadgeType.values()) {
-            // Eğer kullanıcının puanı/takipçisi yetiyorsa ve rozete henüz sahip değilse
-            if (currentFollowerCount >= badge.getRequiredScore() && !currentBadges.contains(badge)) {
-                currentBadges.add(badge);
-                isUpdated = true;
-                // Burada ileride Web Socket ile "Yeni rozet kazandın!" bildirimi atacağız
-            }
+        // Verilen kategori ve puana göre kazanılabilecek rozetleri kontrol et
+        List<BadgeType> potentialBadges = Arrays.stream(BadgeType.values())
+                .filter(badge -> badge.getCategory() == category) // Kategori kontrolü
+                .filter(badge -> score >= badge.getRequiredScore()) // Puan Kontrolü
+                .filter(badge -> !currentBadges.contains(badge)) // Sahiplik kontrolü
+                .toList();
+
+        // Eğer yeni kazanılan rozetler varsa sete ekle
+        if (!potentialBadges.isEmpty()) {
+            currentBadges.addAll(potentialBadges);
+            isUpdated = true;
+
+            potentialBadges.forEach(badge -> log.info("Kullanıcı {} yeni bir rozet kazandı: {}", user.getUsername(),
+                    badge.getDisplayName()));
         }
 
+        // Eğer rozetlerde bir güncelleme varsa DB'ye yansıt
         if (isUpdated) {
             user.getMetrics().setBadges(currentBadges);
             userRepository.save(user);
