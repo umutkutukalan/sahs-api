@@ -4,16 +4,22 @@ import lombok.Getter;
 
 @Getter
 public enum BadgeType {
-    PIONEER(0, "Öncü Üye"),
-    LIGHTHOUSE(50, "Yol Gösterici"),
-    ARCHITECT(100, "Mimar"),
-    VISIONARY(500, "Vizyoner");
+    // Takipçi Odaklı
+    VISIONARY(500, "Vizyoner", BadgeCategory.FOLLOWER),
+    
+    // İçerik Odaklı
+    CONTENT_CREATOR(5, "Üretken", BadgeCategory.CONTENT_COUNT),
+    
+    // Okunma/Etkileşim Odaklı
+    BOOKWORM(1000, "Kütüphane Sakini", BadgeCategory.READING_TIME);
 
     private final int requiredScore;
     private final String displayName;
+    private final BadgeCategory category;
 
-    BadgeType(int requiredScore, String displayName) {
+    BadgeType(int requiredScore, String displayName, BadgeCategory category) {
         this.requiredScore = requiredScore;
         this.displayName = displayName;
+        this.category = category;
     }
 }
