@@ -22,6 +22,8 @@ public class FollowService {
     private final UserRepository userRepository;
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final BadgeService badgeService;
+
     private static final String FOLLOWERS_COUNT_KEY = "user:followers:count:";
     private static final String FOLLOWING_COUNT_KEY = "user:following:count:";
 
@@ -52,6 +54,12 @@ public class FollowService {
         redisTemplate.opsForValue().increment(FOLLOWING_COUNT_KEY + follower.getId());
 
         log.info(followerUsername + " artık " + following.getUsername() + " kullanıcısını takip ediyor.");
+
+        // Rozet kontrolü ve ataması
+        String redisKey = "user:followers:count:" + followingId;
+        Long newCount = redisTemplate.opsForValue().increment(redisKey);
+
+        badgeService.checkAndAssignBadges(followingId, newCount.intValue());
 
         return savedFollow;
     }

@@ -18,8 +18,8 @@ public class BadgeService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void checkAndAssignBadges(String username, Integer currentFollowerCount) {
-        User user = userRepository.findByUsername(username)
+    public void checkAndAssignBadges(Long userId, Integer currentFollowerCount) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
         Set<BadgeType> currentBadges = user.getMetrics().getBadges();
