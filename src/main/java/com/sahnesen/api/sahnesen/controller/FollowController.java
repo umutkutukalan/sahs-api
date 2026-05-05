@@ -48,7 +48,7 @@ public class FollowController {
         return ResponseEntity.ok(followDTO);
     }
 
-     /**
+    /**
      * Takibi bırak
      */
     @DeleteMapping("/{followingId}")
@@ -72,4 +72,22 @@ public class FollowController {
     public ResponseEntity<Map<String, Long>> getFollowStats(@PathVariable String username) {
         return ResponseEntity.ok(followService.getFollowStats(username));
     }
+
+    /**
+     * 🔍 Giriş yapmış kullanıcı bu kişiyi takip ediyor mu?
+     * Frontend'de butonun "Takip Et" mi yoksa "Takibi Bırak" mı olacağını
+     * belirlemek için.
+     */
+    @GetMapping("/is-following/{followingId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Boolean> isFollowing(@PathVariable Long followingId,
+            Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String currentUserUsername = principal.getName();
+        return ResponseEntity.ok(followService.isFollowing(currentUserUsername, followingId));
+    }
+
 }
