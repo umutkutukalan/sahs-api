@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.entities.Follow;
 import com.sahnesen.api.sahnesen.entities.User;
+import com.sahnesen.api.sahnesen.enums.BadgeCategory;
 import com.sahnesen.api.sahnesen.repository.FollowRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
@@ -49,17 +50,18 @@ public class FollowService {
 
         // REDIS COUNTER UPDATE (Atomic)
         // Takip edilenin takipçi sayısını artır
-        redisTemplate.opsForValue().increment(FOLLOWERS_COUNT_KEY + followingId);
+        Long newFollowerCount = redisTemplate.opsForValue().increment(FOLLOWERS_COUNT_KEY + followingId);
+
         // Takip edenin takip ettiklerini artır
         redisTemplate.opsForValue().increment(FOLLOWING_COUNT_KEY + follower.getId());
 
         log.info(followerUsername + " artık " + following.getUsername() + " kullanıcısını takip ediyor.");
 
-        // Rozet kontrolü ve ataması
-        String redisKey = "user:followers:count:" + followingId;
-        Long newCount = redisTemplate.opsForValue().increment(redisKey);
-
-        badgeService.checkAndAssignBadges(followingId, newCount.intValue());
+        // Rozet kontrolü ve ataması (Dinamik ve Tekil Artış)
+        // Artık kategori bilgisini de gönderiyoruz
+        if (newFollowerCount != null) {
+            badgeService.checkAndAssignBadges(followingId, BadgeCategory.FOLLOWER, newFollowerCount.intValue());
+        }
 
         return savedFollow;
     }
