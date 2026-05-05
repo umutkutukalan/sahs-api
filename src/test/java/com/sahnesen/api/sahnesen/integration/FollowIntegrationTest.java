@@ -93,4 +93,13 @@ public class FollowIntegrationTest {
         assertEquals(1, followerCount, "Redis takipçi sayısı güncellenmedi!");
     }
 
+    @Test
+    @DisplayName("Kendi Kendini Takip Etme Hatası")
+    @WithMockUser(username = "kutukalan")
+    void followUser_SelfFollow_ShouldFail() throws Exception {
+
+        mockMvc.perform(post("/api/follows/" + targetUser.getId()))
+                .andExpect(status().isBadRequest());
+    }
+
 }
