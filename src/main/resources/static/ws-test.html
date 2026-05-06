@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Sahnesen WebSocket Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+  </head>
+  <body>
+    <h2>Sahnesen Rozet Bildirim Testi</h2>
+    <p>Tarayıcı konsolunu (F12) aç ve bekle...</p>
+
+    <script>
+      var socket = new SockJS("http://localhost:8080/ws-sahnesen");
+      var stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, function (frame) {
+        console.log("Bağlantı Başarılı: " + frame);
+
+        stompClient.subscribe("/topic/badges/3", function (notification) {
+          console.log("YENİ ROZET GELDİ! 🚀");
+          console.log(JSON.parse(notification.body));
+          alert("Tebrikler! Yeni bir rozet kazandın.");
+        });
+      });
+    </script>
+  </body>
+</html>

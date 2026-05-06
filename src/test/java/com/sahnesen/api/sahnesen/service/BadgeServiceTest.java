@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
@@ -27,12 +28,15 @@ public class BadgeServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private SimpMessagingTemplate messagingTemplate;
+
     @InjectMocks
     private BadgeService badgeService;
 
     @Test
     @DisplayName("Kullanıcı 500 takipçiye ulaştığında VISIONARY rozeti almalı")
-    void shouldAssignLighthouseBadgeWhenScoreIsReached() {
+    void shouldAssignVisionaryBadgeWhenScoreIsReached() {
         // GIVEN
         Long userId = 1L;
         User mockUser = new User();
