@@ -12,6 +12,7 @@ import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
 import com.sahnesen.api.sahnesen.entities.model.UserPreferences;
 import com.sahnesen.api.sahnesen.entities.model.UserProfessional;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
+import com.sahnesen.api.sahnesen.enums.BadgeType;
 import com.sahnesen.api.sahnesen.enums.UserRole;
 
 import jakarta.persistence.CascadeType;
@@ -114,6 +115,11 @@ public class User {
     @OneToMany(mappedBy = "following", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Set<Follow> followers = new HashSet<>();
+
+    // 10 puanlık STAGE_DUST rozeti var mı? Varsa ücretli içerik oluşturabilir.
+    public boolean canCreatePaidContent() {
+        return this.getMetrics().getBadges().contains(BadgeType.STAGE_DUST);
+    }
 
     @CreationTimestamp
     private LocalDateTime createdAt;
