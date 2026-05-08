@@ -28,8 +28,14 @@ public class UserMetrics {
     private Long totalReadingTime = 0L;
     @Builder.Default
     private Integer followerCount = 0;
+
     @Builder.Default
-    private Integer followingCount = 0;
+    private int ticketedShowCount = 0;
+    @Builder.Default
+    private int totalLightCount = 0;
+    @Builder.Default
+    private int totalSignatureCount = 0;
+
     @Builder.Default
     private Integer profileViews = 0; // Yeni: Profil kaç kez görüntülendi?
     @Builder.Default
