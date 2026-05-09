@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,11 @@ public class FileStorageService {
     }
 
     public String storeFile(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null || !Arrays.asList("image/jpeg", "image/png", "image/webp").contains(contentType)) {
+            throw new RuntimeException("Sadece JPEG, PNG ve WebP formatında dosyalar yüklenebilir.");
+        }
+
         String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(file.getOriginalFilename());
         try {
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
