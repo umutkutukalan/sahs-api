@@ -182,10 +182,12 @@ public class UserService {
             if (user.getProfileImg() != null) {
                 fileStorageService.deleteFile(user.getProfileImg());
             }
+            user.setProfileImg(fileName);
         } else if ("COVER".equals(imageType)) {
             if (user.getCoverImg() != null) {
                 fileStorageService.deleteFile(user.getCoverImg());
             }
+            user.setCoverImg(fileName);
         }
 
         userRepository.save(user);
