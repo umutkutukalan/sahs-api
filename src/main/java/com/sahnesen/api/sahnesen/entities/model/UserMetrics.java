@@ -6,6 +6,7 @@ import java.util.Set;
 import com.sahnesen.api.sahnesen.enums.BadgeType;
 
 import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EnumType;
@@ -44,6 +45,7 @@ public class UserMetrics {
     @ElementCollection(targetClass = BadgeType.class)
     @CollectionTable(name = "user_badges", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING) // Veritabanında String olarak sakla (örn: "ARCHITECT")
+    @Column(name = "badges", length = 100) // Rozet isimleri uzun olabilir, bu yüzden length'i artırıyoruz
     @Builder.Default
     private Set<BadgeType> badges = new HashSet<>();
 }
