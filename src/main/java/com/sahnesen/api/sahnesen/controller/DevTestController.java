@@ -26,12 +26,15 @@ public class DevTestController {
         // Hibrit şartları manuel setliyoruz
         metrics.setContentCount(50);
         metrics.setTicketedShowCount(5);
+        metrics.setFollowerCount(150);
         
         userRepository.save(user);
 
         // Şimdi motoru tetikliyoruz. Kategori önemli değil çünkü 
         // metot artık her çağrıldığında SPECIAL rozetleri de check ediyor.
         badgeService.checkAndAssignBadges(3L, BadgeCategory.CONTENT_COUNT, 50);
+        badgeService.checkAndAssignBadges(3L, BadgeCategory.FOLLOWER, 150);
+
         
         return "Hibrit rozet (Ana Sahne Oyuncusu) için şartlar sağlandı ve tetiklendi!";
     }
