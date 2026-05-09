@@ -35,26 +35,33 @@ public class BadgeServiceTest {
     private BadgeService badgeService;
 
     @Test
-    @DisplayName("Kullanıcı 500 takipçiye ulaştığında VISIONARY rozeti almalı")
-    void shouldAssignVisionaryBadgeWhenScoreIsReached() {
+    @DisplayName("Kullanıcı 100 takipçiye ulaştığında VERIFIED rozeti almalı")
+    void shouldAssignVerifiedBadgeWhenScoreIsReached() {
         // GIVEN
         Long userId = 1L;
         User mockUser = new User();
         mockUser.setUsername("kutukalan");
         // UserMetrics ve badges seti başlangıçta boş
-        mockUser.setMetrics(new UserMetrics());
-
+        UserMetrics metrics = new UserMetrics();
+        metrics.setTicketedShowCount(5);
+        metrics.setContentCount(0);
+        mockUser.setMetrics(metrics);
         when(userRepository.findById(userId)).thenReturn(Optional.of(mockUser));
 
         // WHEN
-        // 500 puan (takipçi) gönderiyoruz
-        badgeService.checkAndAssignBadges(userId, BadgeCategory.FOLLOWER, 500);
+        // 100 puan (takipçi) gönderiyoruz
+        badgeService.checkAndAssignBadges(userId, BadgeCategory.FOLLOWER, 100);
+        metrics.setContentCount(50); // 50 içerik şartını manuel setliyoruz
+        badgeService.checkAndAssignBadges(userId, BadgeCategory.CONTENT_COUNT, 50);
 
         // THEN
-        assertTrue(mockUser.getMetrics().getBadges().contains(BadgeType.VISIONARY),
-                "Kullanıcı 500 takipçiye ulaştığında VISIONARY rozeti almalı");
-        verify(userRepository, times(1)).save(mockUser);
+        assertTrue(mockUser.getMetrics().getBadges().contains(BadgeType.VERIFIED),
+                "Kullanıcı 100 takipçiye ulaştığında VERIFIED rozeti almalı");
+        assertTrue(mockUser.getMetrics().getBadges().contains(BadgeType.MASTER_ACTOR),
+                "Kullanıcı 50 içerik oluşturduğunda MASTER_ACTOR rozeti almalı");
+        assertTrue(mockUser.getMetrics().getBadges().contains(BadgeType.MAIN_STAGE),
+                "Kullanıcı 50 içerik ve 5 biletli gösteri düzenlediğinde MAIN_STAGE rozeti almalı");
+        verify(userRepository, times(2)).save(mockUser);
 
     }
-
 }
