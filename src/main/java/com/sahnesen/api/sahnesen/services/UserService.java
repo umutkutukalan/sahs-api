@@ -3,6 +3,7 @@ package com.sahnesen.api.sahnesen.services;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.User;
@@ -24,6 +25,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    private final FileStorageService fileStorageService;
 
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
@@ -164,5 +167,28 @@ public class UserService {
         }
 
         return convertToDto(userRepository.save(user));
+    }
+
+    @Transactional
+    public String updateUserImage(String username, MultipartFile file, String imageType) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+
+        // Dosyayı kaydet ve benzersiz bir dosya adı al
+        String fileName = fileStorageService.storeFile(file);
+
+        // Eski resmi sil (varsa) ve yeni dosya adını kullanıcıya kaydet
+        if ("PROFILE".equals(imageType)) {
+            if (user.getProfileImg() != null) {
+                fileStorageService.deleteFile(user.getProfileImg());
+            }
+        } else if ("COVER".equals(imageType)) {
+            if (user.getCoverImg() != null) {
+                fileStorageService.deleteFile(user.getCoverImg());
+            }
+        }
+
+        userRepository.save(user);
+        return fileName;
     }
 }

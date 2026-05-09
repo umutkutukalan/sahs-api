@@ -65,10 +65,8 @@ public class User {
     private String bio;
     private String motto;
 
-    // Görsel Alanlar
-    @Column(columnDefinition = "TEXT")
+    // Görsel Alanlar - artık sadece dosya isimlerini tutacağız, gerçek dosyalar FileStorageService tarafından yönetilecek
     private String profileImg;
-    @Column(columnDefinition = "TEXT")
     private String coverImg;
 
     @Builder.Default

@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +34,15 @@ public class FileStorageService {
             return fileName; // DB'ye sadece bu ismi kaydedeceğiz
         } catch (Exception e) {
             throw new RuntimeException("Dosya kaydedilemedi.", e);
+        }
+    }
+
+    public void deleteFile(String fileName) {
+        try {
+            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Files.deleteIfExists(filePath);
+        } catch (IOException e) {
+            throw new RuntimeException("Dosya silinemedi. " + fileName, e);
         }
     }
 

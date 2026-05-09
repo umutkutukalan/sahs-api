@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.controller;
 
+import com.sahnesen.api.sahnesen.services.FileStorageService;
 import com.sahnesen.api.sahnesen.services.SocialMediaService;
 import java.security.Principal;
 import java.util.List;
@@ -8,10 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.SocialMediaPlatform;
@@ -43,8 +47,27 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
+    @PostMapping("/me/profile-image")
+    public ResponseEntity<String> updateProfileImage(@RequestParam("file") MultipartFile file, Principal principal) {
+        String username = principal.getName();
+        String fileName = userService.updateUserImage(username, file, "PROFILE");
+
+        return ResponseEntity.ok(fileName);
+    }
+
+    // Kapak fotoğrafını güncellemek için ayrı endpoint
+    @PostMapping("/me/cover-image")
+    public ResponseEntity<String> updateCoverImage(@RequestParam("file") MultipartFile file, Principal principal) {
+        String username = principal.getName();
+
+        // Kapak resmi için benzer mantık
+        String fileName = userService.updateUserImage(username, file, "COVER");
+
+        return ResponseEntity.ok(fileName);
+    }
+
     // ---
-    
+
     @GetMapping("/{username}/social")
     public ResponseEntity<List<SocialMediaPlatform>> getPublicSocials(@PathVariable String username) {
         return ResponseEntity.ok(socialMediaService.getPublicPlatformsByUsername(username));
