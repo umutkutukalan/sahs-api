@@ -16,39 +16,50 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 public class FileStorageService {
 
-    private final Path fileStorageLocation;
+    private final Path rootLocation;
 
     public FileStorageService(@Value("${file.upload-dir}") String uploadDir) {
-        this.fileStorageLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.rootLocation = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
-            Files.createDirectories(this.fileStorageLocation);
+            Files.createDirectories(this.rootLocation);
         } catch (Exception e) {
             throw new RuntimeException("Klasör oluşturulamadı.", e);
         }
     }
 
-    public String storeFile(MultipartFile file) {
+    public String storeFile(MultipartFile file, String subDir) {
         String contentType = file.getContentType();
         if (contentType == null || !Arrays.asList("image/jpeg", "image/png", "image/webp").contains(contentType)) {
             throw new RuntimeException("Sadece JPEG, PNG ve WebP formatında dosyalar yüklenebilir.");
         }
 
-        String fileName = UUID.randomUUID().toString() + "_" + StringUtils.cleanPath(file.getOriginalFilename());
+        // Alt klasör oluşturma
+        Path targetDir = this.rootLocation.resolve(subDir).normalize();
         try {
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-            return fileName; // DB'ye sadece bu ismi kaydedeceğiz
+            Files.createDirectories(targetDir);
         } catch (Exception e) {
-            throw new RuntimeException("Dosya kaydedilemedi.", e);
+            throw new RuntimeException("Alt klasör oluşturulamadı.", e);
+        }
+
+        // Dosya adını temizleyelim
+        String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+        String fileName = UUID.randomUUID().toString() + "." + extension;
+
+        try {
+            Path targetLocation = targetDir.resolve(fileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+            return subDir + "/" + fileName;
+        } catch (Exception e) {
+            throw new RuntimeException("Dosya depolanamadı.", e);
         }
     }
 
-    public void deleteFile(String fileName) {
+    public void deleteFile(String fullPath) {
         try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            Path filePath = this.rootLocation.resolve(fullPath).normalize();
             Files.deleteIfExists(filePath);
         } catch (IOException e) {
-            throw new RuntimeException("Dosya silinemedi. " + fileName, e);
+            throw new RuntimeException("Dosya silinemedi. " + fullPath, e);
         }
     }
 
