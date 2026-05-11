@@ -174,20 +174,22 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        // Dosyayı kaydet ve benzersiz bir dosya adı al
-        String fileName = fileStorageService.storeFile(file);
+        String fileName;
 
-        // Eski resmi sil (varsa) ve yeni dosya adını kullanıcıya kaydet
         if ("PROFILE".equals(imageType)) {
+            fileName = fileStorageService.storeFile(file, "profileImgs");
             if (user.getProfileImg() != null) {
                 fileStorageService.deleteFile(user.getProfileImg());
             }
             user.setProfileImg(fileName);
         } else if ("COVER".equals(imageType)) {
+            fileName = fileStorageService.storeFile(file, "coverImgs");
             if (user.getCoverImg() != null) {
                 fileStorageService.deleteFile(user.getCoverImg());
             }
             user.setCoverImg(fileName);
+        } else {
+            throw new RuntimeException("Geçersiz görsel tipi!");
         }
 
         userRepository.save(user);
