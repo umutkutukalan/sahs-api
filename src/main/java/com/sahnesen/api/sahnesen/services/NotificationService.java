@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.sahnesen.api.sahnesen.dto.NotificationDTO;
 import com.sahnesen.api.sahnesen.entities.Notification;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.NotificationType;
@@ -37,10 +38,19 @@ public class NotificationService {
                 .isRead(false)
                 .build();
 
-        notificationRepository.save(notification);
+        Notification savedNotification = notificationRepository.save(notification);
+
+        NotificationDTO dto = NotificationDTO.builder()
+                .id(savedNotification.getId())
+                .title(savedNotification.getTitle())
+                .message(savedNotification.getMessage())
+                .type(savedNotification.getType())
+                .targetUrl(savedNotification.getTargetUrl())
+                .createdAt(savedNotification.getCreatedAt())
+                .build();
 
         String destination = "/topic/notifications/" + userId;
-        messagingTemplate.convertAndSend(destination, notification);
+        messagingTemplate.convertAndSend(destination, dto);
     }
 
     public List<Notification> getUserNotifications(Long userId) {
@@ -48,11 +58,22 @@ public class NotificationService {
     }
 
     @Transactional
-    public void markAsRead(Long notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(n -> {
-            n.setRead(true);
-            notificationRepository.save(n);
-        });
+    public void markAsRead(Long notificationId, String username) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new RuntimeException("Bildirim bulunamadı."));
+
+        if (!notification.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu bildirimi okumaya yetkiniz yok.");
+        }
+
+        notification.setRead(true);
+        // @Transactional sayesinde save dememize bile gerek yok, otomatik güncellenir.
+    }
+
+    @Transactional
+    public void markAllAsRead(Long userId) {
+        List<Notification> unreadNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        unreadNotifications.forEach(n -> n.setRead(true));
     }
 
 }
