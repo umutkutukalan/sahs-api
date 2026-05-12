@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
-import com.sahnesen.api.sahnesen.enums.NotificationsType;
+import com.sahnesen.api.sahnesen.enums.NotificationType;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -42,7 +42,7 @@ public class Notification {
     private String message;
 
     @Enumerated(EnumType.STRING)
-    private NotificationsType type;
+    private NotificationType type;
 
     private boolean isRead = false; // Okundu bilgisi
 

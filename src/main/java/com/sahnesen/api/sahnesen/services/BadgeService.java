@@ -2,21 +2,17 @@ package com.sahnesen.api.sahnesen.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.sahnesen.api.sahnesen.dto.BadgeNotificationDTO;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
 import com.sahnesen.api.sahnesen.enums.BadgeCategory;
 import com.sahnesen.api.sahnesen.enums.BadgeType;
-import com.sahnesen.api.sahnesen.enums.NotificationsType;
+import com.sahnesen.api.sahnesen.enums.NotificationType;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -90,7 +86,7 @@ public class BadgeService {
                 userId,
                 "Yeni Rozet!",
                 "'" + badge.getDisplayName() + "' rozetini kazandın! Sahne tozu yutmaya devam et.",
-                NotificationsType.BADGE_EARNED,
+                NotificationType.BADGE_EARNED,
                 "/profile/me");
 
         log.info("Rozet kazanma bildirimi merkezi servise iletildi: {}", badge.getDisplayName());

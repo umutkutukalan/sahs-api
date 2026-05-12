@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.sahnesen.api.sahnesen.entities.Notification;
 import com.sahnesen.api.sahnesen.entities.User;
-import com.sahnesen.api.sahnesen.enums.NotificationsType;
+import com.sahnesen.api.sahnesen.enums.NotificationType;
 import com.sahnesen.api.sahnesen.repository.NotificationRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
@@ -23,7 +23,7 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate; // WebSocket mesajlaşma için
 
     @Transactional
-    public void createNotification(Long userId, String title, String message, NotificationsType type,
+    public void createNotification(Long userId, String title, String message, NotificationType type,
             String targetUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Bildirim gönderilecek kullanıcı bulunamadı."));
