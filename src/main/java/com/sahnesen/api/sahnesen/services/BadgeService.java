@@ -16,6 +16,7 @@ import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
 import com.sahnesen.api.sahnesen.enums.BadgeCategory;
 import com.sahnesen.api.sahnesen.enums.BadgeType;
+import com.sahnesen.api.sahnesen.enums.NotificationsType;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 public class BadgeService {
 
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
     private final SimpMessagingTemplate messagingTemplate; // WebSocket mesajlarını göndermek için kullanacağımız
                                                            // template
 
@@ -83,15 +85,16 @@ public class BadgeService {
     }
 
     private void sendBadgeNotification(Long userId, BadgeType badge) {
-        // Hedef kanal: /topic/badges/1
-        String destination = "/topic/badges/" + userId;
 
-        // Gönderilecek veri (Payload)
-        BadgeNotificationDTO notification = new BadgeNotificationDTO(userId, badge.name(), badge.getDisplayName(),
-                System.currentTimeMillis());
+        notificationService.createNotification(
+                userId,
+                "Yeni Rozet!",
+                "'" + badge.getDisplayName() + "' rozetini kazandın! Sahne tozu yutmaya devam et.",
+                NotificationsType.BADGE_EARNED,
+                "/profile/me");
 
-        messagingTemplate.convertAndSend(destination, notification);
-        log.info("WebSocket bildirimi gönderildi -> {}: {}", destination, badge.getDisplayName());
+        log.info("Rozet kazanma bildirimi merkezi servise iletildi: {}", badge.getDisplayName());
+
     }
 
 }
