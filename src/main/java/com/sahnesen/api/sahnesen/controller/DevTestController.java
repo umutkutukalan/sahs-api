@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.controller;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
+@Profile("dev") // Sadece 'dev' profilinde aktif olacak
 public class DevTestController {
     private final BadgeService badgeService;
     private final UserRepository userRepository;

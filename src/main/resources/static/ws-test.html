@@ -1,27 +1,152 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
-    <title>Sahnesen WebSocket Test</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sahnesen | Bildirim Testi</title>
+    <!-- Tailwind CSS for Quick Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f8fafc;
+      }
+      .notification-dot {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        height: 10px;
+        width: 10px;
+        background-color: #ef4444;
+        border-radius: 50%;
+        display: none;
+      }
+    </style>
   </head>
   <body>
-    <h2>Sahnesen Rozet Bildirim Testi</h2>
-    <p>Tarayıcı konsolunu (F12) aç ve bekle...</p>
+    <!-- Navbar -->
+    <nav
+      class="bg-white border-b border-gray-200 px-6 py-4 flex justify-between items-center shadow-sm"
+    >
+      <div class="flex items-center gap-2">
+        <div
+          class="w-8 h-8 bg-black rounded-lg flex items-center justify-center"
+        >
+          <span class="text-white font-bold text-sm">S</span>
+        </div>
+        <span class="text-xl font-semibold tracking-tight"
+          >Sahnesen
+          <span class="text-gray-400 font-light text-sm">DevTest</span></span
+        >
+      </div>
+
+      <div class="flex items-center gap-6">
+        <a href="#" class="text-gray-600 hover:text-black transition">Sahne</a>
+        <a href="#" class="text-gray-600 hover:text-black transition">Keşfet</a>
+        <!-- Bildirim Butonu -->
+        <button
+          class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition focus:outline-none"
+          onclick="clearNotifications()"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+            />
+          </svg>
+          <div id="dot" class="notification-dot"></div>
+        </button>
+        <div
+          class="w-10 h-10 bg-gray-200 rounded-full overflow-hidden border border-gray-300"
+        >
+          <img
+            src="https://ui-avatars.com/api/?name=Umut+Kutukalan&background=random"
+            alt="User"
+          />
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-3xl mx-auto mt-20 text-center">
+      <h1 class="text-4xl font-bold text-gray-900 mb-4">
+        WebSocket Bildirim Testi
+      </h1>
+      <p class="text-gray-500 mb-8">
+        Backend'den bir bildirim tetiklendiğinde burada anlık olarak
+        göreceksiniz.
+      </p>
+
+      <div
+        id="status"
+        class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800"
+      >
+        Bağlantı bekleniyor...
+      </div>
+
+      <div id="log-container" class="mt-12 text-left space-y-4">
+        <!-- Bildirimler buraya düşecek -->
+      </div>
+    </main>
 
     <script>
+      const userId = 3; // Test ettiğimiz kullanıcı ID
+      const dot = document.getElementById("dot");
+      const status = document.getElementById("status");
+      const logContainer = document.getElementById("log-container");
+
+      // WebSocket Connection
       var socket = new SockJS("http://localhost:8080/ws-sahnesen");
       var stompClient = Stomp.over(socket);
 
       stompClient.connect({}, function (frame) {
+        status.innerText = "Bağlı: /topic/notifications/" + userId;
+        status.className =
+          "inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800";
         console.log("Bağlantı Başarılı: " + frame);
 
-        stompClient.subscribe("/topic/badges/3", function (notification) {
-          console.log("YENİ ROZET GELDİ! 🚀");
-          console.log(JSON.parse(notification.body));
-          alert("Tebrikler! Yeni bir rozet kazandın.");
-        });
+        stompClient.subscribe(
+          "/topic/notifications/" + userId,
+          function (notification) {
+            const data = JSON.parse(notification.body);
+            showNotification(data);
+          },
+        );
       });
+
+      function showNotification(data) {
+        // Kırmızı noktayı göster
+        dot.style.display = "block";
+
+        // Log ekle
+        const notificationHtml = `
+                <div class="bg-white p-4 rounded-xl border-l-4 border-black shadow-sm animate-bounce">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold text-gray-900">${data.title}</h4>
+                            <p class="text-gray-600 text-sm">${data.message}</p>
+                        </div>
+                        <span class="text-xs text-gray-400">${new Date(data.createdAt).toLocaleTimeString()}</span>
+                    </div>
+                </div>
+            `;
+        logContainer.insertAdjacentHTML("afterbegin", notificationHtml);
+      }
+
+      function clearNotifications() {
+        dot.style.display = "none";
+      }
     </script>
   </body>
 </html>
