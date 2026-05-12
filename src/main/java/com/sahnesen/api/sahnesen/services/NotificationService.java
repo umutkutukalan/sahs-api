@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.List;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -39,12 +41,18 @@ public class NotificationService {
 
         String destination = "/topic/notifications/" + userId;
         messagingTemplate.convertAndSend(destination, notification);
+    }
 
+    public List<Notification> getUserNotifications(Long userId) {
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }
 
     @Transactional
     public void markAsRead(Long notificationId) {
-        notificationRepository.findById(notificationId).ifPresent(n -> n.setRead(true));
+        notificationRepository.findById(notificationId).ifPresent(n -> {
+            n.setRead(true);
+            notificationRepository.save(n);
+        });
     }
 
 }

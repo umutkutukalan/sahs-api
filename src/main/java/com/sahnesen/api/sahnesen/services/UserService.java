@@ -103,6 +103,12 @@ public class UserService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+    }
+
     @Transactional
     public UserDTO updateMyProfile(String username, UserUpdateRequest request) {
         User user = userRepository.findByUsername(username)
