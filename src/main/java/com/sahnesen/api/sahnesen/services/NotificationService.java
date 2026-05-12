@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.services;
 
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.sahnesen.api.sahnesen.entities.Notification;
@@ -17,6 +18,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate; // WebSocket mesajlaşma için
 
     @Transactional
     public void createNotification(Long userId, String title, String message, NotificationsType type,
@@ -35,8 +37,8 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // TODO: WebSocket veya push notification entegrasyonu ile gerçek zamanlı
-        // bildirim gönderimi yapılabilir
+        String destination = "/topic/notifications/" + userId;
+        messagingTemplate.convertAndSend(destination, notification);
 
     }
 
