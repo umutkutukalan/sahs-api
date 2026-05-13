@@ -36,6 +36,7 @@ public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService; // Post oluşturulduğunda bildirim göndermek için ekliyoruz
 
     private final StringRedisTemplate redisTemplate; // Redis işlemleri için ekliyoruz
 
@@ -63,6 +64,12 @@ public class PostService {
                 .user(user)
                 .isPublished(request.isPublished())
                 .build();
+
+        Post savedPost = postRepository.save(post);
+
+        if (savedPost.isPublished()) {
+            notificationService.notifyFollowers(user.getId(), user.getUsername(), savedPost.getTitle(), savedPost.getSlug());
+        }
 
         return convertToResponse(postRepository.save(post));
     }

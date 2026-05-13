@@ -75,14 +75,34 @@ public class NotificationService {
         // Veritabanında güncelliyoruz
         notificationRepository.markAllAsReadByUserId(userId);
 
-        // WebSocket ile frontend'e "READ_ALL" mesajı gönderiyoruz (Sıfırla bilgisi aslında)
-        // Sayacın sıfırlanmasını sağlıyoruz, böylece kullanıcı yeni bildirim gelene kadar 0 görür.
+        // WebSocket ile frontend'e "READ_ALL" mesajı gönderiyoruz (Sıfırla bilgisi
+        // aslında)
+        // Sayacın sıfırlanmasını sağlıyoruz, böylece kullanıcı yeni bildirim gelene
+        // kadar 0 görür.
         String destination = "/topic/notifications/" + userId;
         NotificationDTO resetDto = NotificationDTO.builder()
                 .type(NotificationType.SYSTEM)
                 .message("READ_ALL")
                 .build();
         messagingTemplate.convertAndSend(destination, resetDto);
+    }
+
+    @Transactional
+    public void notifyFollowers(Long authorId, String authorName, String postTitle, String postSlug) {
+        // 1. Yazarın takipçilerini getir (User içinde followers set'in olduğunu
+        // varsayıyorum)
+        User author = userRepository.findById(authorId)
+                .orElseThrow(() -> new RuntimeException("Yazar bulunamadı."));
+
+        String title = "Yeni Sahne!";
+        String message = authorName + " yeni bir içerik paylaştı: " + postTitle;
+        String targetUrl = "/post/" + postSlug;
+
+        // 2. Her takipçi için bildirim oluştur
+        author.getFollowers().forEach(follower -> {
+            // Mevcut createNotification metodunu her takipçi için çağırıyoruz
+            createNotification(follower.getId(), title, message, NotificationType.FOLLOWED_USER_POST, targetUrl);
+        });
     }
 
 }
