@@ -75,7 +75,7 @@ public class PostService {
             notificationService.notifyFollowers(user.getId(), user.getUsername(), savedPost.getTitle(), savedPost.getSlug());
         }
 
-        return convertToResponse(postRepository.save(post));
+        return convertToResponse(savedPost);
     }
 
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
