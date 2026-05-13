@@ -72,8 +72,17 @@ public class NotificationService {
 
     @Transactional
     public void markAllAsRead(Long userId) {
-        List<Notification> unreadNotifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        unreadNotifications.forEach(n -> n.setRead(true));
+        // Veritabanında güncelliyoruz
+        notificationRepository.markAllAsReadByUserId(userId);
+
+        // WebSocket ile frontend'e "READ_ALL" mesajı gönderiyoruz (Sıfırla bilgisi aslında)
+        // Sayacın sıfırlanmasını sağlıyoruz, böylece kullanıcı yeni bildirim gelene kadar 0 görür.
+        String destination = "/topic/notifications/" + userId;
+        NotificationDTO resetDto = NotificationDTO.builder()
+                .type(NotificationType.SYSTEM)
+                .message("READ_ALL")
+                .build();
+        messagingTemplate.convertAndSend(destination, resetDto);
     }
 
 }
