@@ -76,6 +76,12 @@ public class PostController {
             @PathVariable Long postId,
             @RequestParam("file") MultipartFile file,
             Principal principal) {
+
+        // GÜVENLİK: Sadece postun sahibi bu işlemi yapabilir, bu yüzden önce postun
+        // sahibi mi kontrol edelim
+        postService.validatePostOwnership(postId, principal.getName());
+
+        // Eğer kontrol geçerse, dosyayı kaydedelim ve URL'i döndürelim
         String imageUrl = fileService.savePostImage(postId, file);
         return ResponseEntity.ok(Map.of("url", imageUrl));
     }

@@ -72,10 +72,20 @@ public class PostService {
         fileService.createPostFolder(savedPost.getId());
 
         if (savedPost.isPublished()) {
-            notificationService.notifyFollowers(user.getId(), user.getUsername(), savedPost.getTitle(), savedPost.getSlug());
+            notificationService.notifyFollowers(user.getId(), user.getUsername(), savedPost.getTitle(),
+                    savedPost.getSlug());
         }
 
         return convertToResponse(savedPost);
+    }
+
+    public void validatePostOwnership(Long postId, String username) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
+        }
     }
 
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
@@ -226,4 +236,5 @@ public class PostService {
         return Boolean.TRUE.equals(isNewVisit);
 
     }
+
 }
