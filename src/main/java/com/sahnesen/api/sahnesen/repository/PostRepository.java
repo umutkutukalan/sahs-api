@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -16,7 +18,8 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // Tüm yayınlanmış yazıları getir (Ana sayfa akışı için)
     Page<Post> findAllByIsPublishedTrueOrderByCreatedAtDesc(Pageable pageable);
 
-    // Belirli bir kullanıcının tüm yazılarını getir (Yazarın kendi yönetim paneli için)
+    // Belirli bir kullanıcının tüm yazılarını getir (Yazarın kendi yönetim paneli
+    // için)
     Page<Post> findAllByUser_UsernameOrderByCreatedAtDesc(String username, Pageable pageable);
 
     Optional<Post> findBySlug(String slug);
@@ -25,4 +28,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // Slug çakışması var mı kontrolü
     boolean existsBySlug(String slug);
+
+    // 30 gündür güncellenmemiş ve hala yayınlanmamış taslakları bulmak için
+    List<Post> findAllByIsPublishedFalseAndUpdatedAtBefore(LocalDateTime dateTime);
 }

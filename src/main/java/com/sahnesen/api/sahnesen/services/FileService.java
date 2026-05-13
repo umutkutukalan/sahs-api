@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -76,6 +78,25 @@ public class FileService {
 
     private String getFileExtension(String fileName) {
         return fileName.substring(fileName.lastIndexOf("."));
+    }
+
+    public void deletePostFolder(Long postId) {
+        Path postPath = root.resolve(postId.toString());
+        if (Files.exists(postPath)) {
+            try (Stream<Path> paths = Files.walk(postPath)) {
+                paths.sorted(Comparator.reverseOrder()) // Önce içindekiler sonra klasörün kendisi
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                // Loglama: Bir dosya silinemezse süreci tamamen durdurma, devam et
+                                System.err.println("Dosya silinemedi: " + path + " - " + e.getMessage());
+                            }
+                        });
+            } catch (IOException e) {
+                throw new RuntimeException("Klasör tarama hatası: " + e.getMessage());
+            }
+        }
     }
 
 }
