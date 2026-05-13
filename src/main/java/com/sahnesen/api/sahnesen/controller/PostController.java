@@ -2,6 +2,7 @@ package com.sahnesen.api.sahnesen.controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,10 +17,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.response.PostResponse;
+import com.sahnesen.api.sahnesen.services.FileService;
 import com.sahnesen.api.sahnesen.services.PostService;
 
 import jakarta.validation.Valid;
@@ -31,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class PostController {
 
     private final PostService postService;
+    private final FileService fileService;
 
     /**
      * Yeni bir post (Sahne) oluştur.
@@ -65,6 +69,15 @@ public class PostController {
     public ResponseEntity<Void> deleteMyPost(@PathVariable Long postId, Principal principal) {
         postService.deletePost(principal.getName(), postId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{postId}/images")
+    public ResponseEntity<Map<String, String>> uploadPostImage(
+            @PathVariable Long postId,
+            @RequestParam("file") MultipartFile file,
+            Principal principal) {
+        String imageUrl = fileService.savePostImage(postId, file);
+        return ResponseEntity.ok(Map.of("url", imageUrl));
     }
 
     // ----
