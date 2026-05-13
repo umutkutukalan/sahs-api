@@ -37,6 +37,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService; // Post oluşturulduğunda bildirim göndermek için ekliyoruz
+    private final FileService fileService; // Dosya işlemleri için ekliyoruz
 
     private final StringRedisTemplate redisTemplate; // Redis işlemleri için ekliyoruz
 
@@ -59,13 +60,16 @@ public class PostService {
                 .postType(request.getPostType())
                 .title(request.getTitle())
                 .slug(slug)
-                .content(request.getContent())
+                .content(request.getContent().toString())
                 .coverImage(request.getCoverImage())
                 .user(user)
                 .isPublished(request.isPublished())
                 .build();
 
         Post savedPost = postRepository.save(post);
+
+        // ID artık elimizde, klasörü fiziksel olarak oluşturabiliriz
+        fileService.createPostFolder(savedPost.getId());
 
         if (savedPost.isPublished()) {
             notificationService.notifyFollowers(user.getId(), user.getUsername(), savedPost.getTitle(), savedPost.getSlug());
@@ -91,7 +95,7 @@ public class PostService {
         }
 
         post.setTitle(request.getTitle());
-        post.setContent(request.getContent());
+        post.setContent(request.getContent().toString());
         post.setCoverImage(request.getCoverImage());
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());
