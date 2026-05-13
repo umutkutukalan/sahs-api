@@ -103,6 +103,13 @@ public class PostService {
         if (!post.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
+        
+        // Eğer post henüz yayınlanmadıysa, başlık her değiştiğinde slug'ı da güncelle
+        if (!post.isPublished() && !post.getTitle().equals(request.getTitle())) {
+            String newSlug = SlugUtil.generateSlug(request.getTitle());
+            // Çakışma kontrolü gerekebilir (createPost'taki mantıkla aynı)
+            post.setSlug(newSlug);
+        }
 
         post.setTitle(request.getTitle());
         post.setContent(request.getContent().toString());
