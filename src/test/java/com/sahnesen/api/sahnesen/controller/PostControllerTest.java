@@ -12,7 +12,7 @@ import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.PostService;
 
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,25 +23,24 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 @WebMvcTest(PostController.class)
 public class PostControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockitoBean
-    private PostService postService;
+        @MockitoBean
+        private PostService postService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @Autowired
+        private ObjectMapper objectMapper;
 
     @Test
     void shouldCreatePostSuccessfully() throws Exception {
         // GIVEN
         PostRequestDTO request = new PostRequestDTO();
         request.setTitle("Test Başlığı");
-        request.setContent("{\"type\":\"doc\",\"content\":[]}");
+        request.setContent(objectMapper.readTree("{\"type\": \"doc\", \"content\": []}"));
         request.setPostType(PostType.STUDY);
         request.setPublished(true);
 
