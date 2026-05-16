@@ -28,6 +28,19 @@ public class UserService {
 
     private final FileStorageService fileStorageService;
 
+    @Transactional(readOnly = true)
+    public UserDTO getMyProfileDetails(String usernameOrEmail) {
+        // Burada Spring Security'de username mi yoksa email mi tuttuğuna göre findBy
+        // metodunu seçmelisin
+        User user = userRepository.findByUsername(usernameOrEmail)
+                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
+                        .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı")));
+
+        // Kullanıcıyı DTO'ya mapleyip dönüyoruz (convertToDto mantığın nasılsa ona
+        // uyarla)
+        return convertToDto(user);
+    }
+
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
         // 1. Güvenlik Kontrolü: Eskiden findAll kullanıyordun, şimdi exists

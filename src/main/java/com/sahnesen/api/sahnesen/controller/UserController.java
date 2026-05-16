@@ -33,6 +33,20 @@ public class UserController {
     private final SocialMediaService socialMediaService;
     private final UserService userService;
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDTO> getMyProfile(Principal principal) {
+        if (principal == null) {
+            // Eğer kullanıcı oturum açmadıysa direkt 401 fırlat ki Next.js login modalını
+            // açsın
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // principal.getName() bize giriş yapan kullanıcının username bilgisini verir
+        // (veya Spring Security'de neyi setlediysen, örn: email)
+        UserDTO currentUser = userService.getMyProfileDetails(principal.getName());
+        return ResponseEntity.ok(currentUser);
+    }
+
     // Kendi profilini güncelle
     @PutMapping("/me")
     public ResponseEntity<UserDTO> updateMyProfile(@Valid @RequestBody UserUpdateRequest updateRequest,
