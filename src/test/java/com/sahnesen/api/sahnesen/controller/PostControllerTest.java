@@ -35,37 +35,37 @@ public class PostControllerTest {
         @Autowired
         private ObjectMapper objectMapper;
 
-    @Test
-    void shouldCreatePostSuccessfully() throws Exception {
-        // GIVEN
-        PostRequestDTO request = new PostRequestDTO();
-        request.setTitle("Test Başlığı");
-        request.setContent(objectMapper.readTree("{\"type\": \"doc\", \"content\": []}"));
-        request.setPostType(PostType.STUDY);
-        request.setPublished(true);
+        @Test
+        void shouldCreatePostSuccessfully() throws Exception {
+                // GIVEN
+                PostRequestDTO request = new PostRequestDTO();
+                request.setTitle("Test Başlığı");
+                request.setContent(("{\"type\": \"doc\", \"content\": []}"));
+                request.setPostType(PostType.STUDY);
+                request.setPublished(true);
 
-        PostResponse savedPost = PostResponse.builder()
-                .id(1L)
-                .title("Test Başlığı")
-                .slug("test-basligi")
-                .postType(PostType.STUDY)
-                .authorName("Umut")
-                .authorUsername("umutkutukalan")
-                .build();
+                PostResponse savedPost = PostResponse.builder()
+                                .id(1L)
+                                .title("Test Başlığı")
+                                .slug("test-basligi")
+                                .postType(PostType.STUDY)
+                                .authorName("Umut")
+                                .authorUsername("umutkutukalan")
+                                .build();
 
-        when(postService.createPost(eq("umutkutukalan"), any(PostRequestDTO.class)))
-                .thenReturn(savedPost);
+                when(postService.createPost(eq("umutkutukalan"), any(PostRequestDTO.class)))
+                                .thenReturn(savedPost);
 
-        // WHEN & THEN
-        mockMvc.perform(post("/api/posts/me")
-                .with(csrf())
-                .with(user("umutkutukalan"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.slug").value("test-basligi"))
-                .andExpect(jsonPath("$.postType").value("STUDY"))
-                .andExpect(jsonPath("$.authorName").value("Umut"))
-                .andExpect(jsonPath("$.authorUsername").value("umutkutukalan"));
-    }
+                // WHEN & THEN
+                mockMvc.perform(post("/api/posts/me")
+                                .with(csrf())
+                                .with(user("umutkutukalan"))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isCreated())
+                                .andExpect(jsonPath("$.slug").value("test-basligi"))
+                                .andExpect(jsonPath("$.postType").value("STUDY"))
+                                .andExpect(jsonPath("$.authorName").value("Umut"))
+                                .andExpect(jsonPath("$.authorUsername").value("umutkutukalan"));
+        }
 }

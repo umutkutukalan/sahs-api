@@ -16,6 +16,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.User;
@@ -45,6 +46,8 @@ public class PostService {
 
     private final SimpMessagingTemplate messagingTemplate; // WebSocket üzerinden mesaj göndermek için
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     public PostResponse createPost(String username, PostRequestDTO request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
@@ -55,12 +58,20 @@ public class PostService {
             slug = slug + "-" + System.currentTimeMillis() % 1000;
         }
 
+        String jsonContentString;
+        try {
+            // Map nesnesini geçerli, tırnak işaretli bir JSON String'ine dönüştürüyoruz!
+            jsonContentString = objectMapper.writeValueAsString(request.getContent());
+        } catch (Exception e) {
+            throw new RuntimeException("İçerik JSON formatına dönüştürülemedi: " + e.getMessage());
+        }
+
         // 3. Post nesnesini inşa et
         Post post = Post.builder()
                 .postType(request.getPostType())
                 .title(request.getTitle())
                 .slug(slug)
-                .content(request.getContent().toString())
+                .content(jsonContentString) // Buraya artık geçerli JSON string gidiyor!
                 .coverImage(request.getCoverImage())
                 .user(user)
                 .isPublished(request.isPublished())
@@ -103,7 +114,7 @@ public class PostService {
         if (!post.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
-        
+
         // Eğer post henüz yayınlanmadıysa, başlık her değiştiğinde slug'ı da güncelle
         if (!post.isPublished() && !post.getTitle().equals(request.getTitle())) {
             String newSlug = SlugUtil.generateSlug(request.getTitle());
@@ -111,8 +122,15 @@ public class PostService {
             post.setSlug(newSlug);
         }
 
+        String jsonContentString;
+        try {
+            jsonContentString = objectMapper.writeValueAsString(request.getContent());
+        } catch (Exception e) {
+            throw new RuntimeException("İçerik JSON formatına dönüştürülemedi: " + e.getMessage());
+        }
+
         post.setTitle(request.getTitle());
-        post.setContent(request.getContent().toString());
+        post.setContent(jsonContentString);
         post.setCoverImage(request.getCoverImage());
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());

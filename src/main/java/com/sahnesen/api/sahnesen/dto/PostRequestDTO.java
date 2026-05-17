@@ -1,6 +1,7 @@
 package com.sahnesen.api.sahnesen.dto;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Map;
+
 import com.sahnesen.api.sahnesen.enums.PostType;
 
 import jakarta.validation.constraints.NotBlank;
@@ -18,8 +19,8 @@ public class PostRequestDTO {
     @Size(min = 3, max = 150, message = "Başlık 3 ile 150 karakter arasında olmalıdır.")
     private String title;
 
-    @NotBlank(message = "İçerik boş olamaz.")
-    private JsonNode content; // Tiptap JSON String
+    @NotNull(message = "İçerik boş olamaz.")
+    private Map<String, Object> content; // Tiptap JSON String
 
     private String coverImage; // Opsiyonel Kapak Fotoğrafı URL'i
 

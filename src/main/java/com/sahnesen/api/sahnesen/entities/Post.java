@@ -48,7 +48,7 @@ public class Post {
     private String slug;
 
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "LONGTEXT")
     private String content; // Tiptap'tan gelecek JSON String
 
     private String coverImage; // Görsel URL'i
