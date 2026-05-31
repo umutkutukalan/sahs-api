@@ -44,3 +44,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### MacOS ###
+.DS_
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+### Sahnesen - Kullanıcı yüklemeleri ve medya dosyaları ###
+uploads/
