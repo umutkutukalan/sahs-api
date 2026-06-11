@@ -115,8 +115,10 @@ public class PostService {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
 
+        Post savedPost = postRepository.save(post); // Güncellenmiş postu kaydetmeden önce slug'ı güncellememiz gerekiyor
+
         // Eğer post henüz yayınlanmadıysa, başlık her değiştiğinde slug'ı da güncelle
-        if (!post.isPublished() && !post.getTitle().equals(request.getTitle())) {
+        if (!savedPost.isPublished() && !post.getTitle().equals(request.getTitle())) {
             String newSlug = SlugUtil.generateSlug(request.getTitle());
             // Çakışma kontrolü gerekebilir (createPost'taki mantıkla aynı)
             post.setSlug(newSlug);
