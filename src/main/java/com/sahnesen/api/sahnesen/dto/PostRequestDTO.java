@@ -13,7 +13,7 @@ import lombok.Data;
 public class PostRequestDTO {
 
     @NotNull(message = "Lütfen içeriğiniz için bir tür seçiniz.")
-    private PostType postType; // Yazı türü (BLOG, STUDY, PROJECT, TUTORIAL, OPINION)
+    private PostType postType; // Yazı türü (BLOG, PROJECT, SAHNE, MONOLOG, YANYANA, TERSYUZ)
 
     @NotBlank(message = "Başlık boş olamaz.")
     @Size(min = 3, max = 150, message = "Başlık 3 ile 150 karakter arasında olmalıdır.")

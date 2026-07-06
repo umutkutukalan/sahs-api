@@ -39,16 +39,16 @@ public class PostControllerTest {
         void shouldCreatePostSuccessfully() throws Exception {
                 // GIVEN
                 PostRequestDTO request = new PostRequestDTO();
+                request.setPostType(PostType.BLOG);
                 request.setTitle("Test Başlığı");
-                request.setContent(("{\"type\": \"doc\", \"content\": []}"));
-                request.setPostType(PostType.STUDY);
+                request.setContent(null);
                 request.setPublished(true);
 
                 PostResponse savedPost = PostResponse.builder()
                                 .id(1L)
                                 .title("Test Başlığı")
                                 .slug("test-basligi")
-                                .postType(PostType.STUDY)
+                                .postType(PostType.BLOG)
                                 .authorName("Umut")
                                 .authorUsername("umutkutukalan")
                                 .build();
