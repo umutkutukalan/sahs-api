@@ -12,6 +12,9 @@ public class WebConfig implements WebMvcConfigurer {
         // "uploads" klasörünü "/uploads/**" URL'siyle eşleştiriyoruz
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:./uploads/");
+
+        registry.addResourceHandler("/profileImgs/**")
+                .addResourceLocations("file:./uploads/profileImgs/");
     }
 
 }
