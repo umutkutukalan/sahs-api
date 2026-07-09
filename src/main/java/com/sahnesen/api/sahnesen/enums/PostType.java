@@ -7,5 +7,5 @@ public enum PostType {
     MONOLOG,
     ETUT,
     YANYANA,
-    TERSYUZ
+    TERSYUZ,
 }

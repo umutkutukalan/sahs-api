@@ -41,6 +41,13 @@ public class UserService {
         return convertToDto(user);
     }
 
+    @Transactional(readOnly = true)
+    public UserDTO getUserProfile(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        return convertToDto(user);
+    }
+
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
         // 1. Güvenlik Kontrolü: Eskiden findAll kullanıyordun, şimdi exists
