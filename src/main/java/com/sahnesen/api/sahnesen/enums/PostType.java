@@ -5,6 +5,7 @@ public enum PostType {
     PROJECT, // Proje tanıtımı, bitirilen projeler
     SAHNE,
     MONOLOG,
+    ETUT,
     YANYANA,
     TERSYUZ
 }
