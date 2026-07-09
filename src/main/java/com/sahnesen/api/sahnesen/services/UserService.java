@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
@@ -41,11 +42,28 @@ public class UserService {
         return convertToDto(user);
     }
 
+    private PublicUserDTO convertToPublicDto(User user) {
+        return PublicUserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .slug(user.getSlug())
+                .profileImg(user.getProfileImg())
+                .coverImg(user.getCoverImg())
+                .bio(user.getBio())
+                .motto(user.getMotto())
+                .city(user.getCity())
+                .district(user.getDistrict())
+                .role(user.getRole().name())
+                .build();
+    }
+
     @Transactional(readOnly = true)
-    public UserDTO getUserProfile(String username) {
+    public PublicUserDTO getUserProfile(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-        return convertToDto(user);
+        return convertToPublicDto(user);
     }
 
     @Transactional

@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.SocialMediaPlatform;
 import com.sahnesen.api.sahnesen.request.UserUpdateRequest;
@@ -48,9 +49,8 @@ public class UserController {
     }
 
     @GetMapping("/{username}")
-    public ResponseEntity<UserDTO> getUserProfile(@PathVariable String username) {
-        UserDTO user = userService.getUserProfile(username);
-        return ResponseEntity.ok(user);
+    public ResponseEntity<PublicUserDTO> getUserProfile(@PathVariable String username) {
+        return ResponseEntity.ok(userService.getUserProfile(username));
     }
 
     // Kendi profilini güncelle
