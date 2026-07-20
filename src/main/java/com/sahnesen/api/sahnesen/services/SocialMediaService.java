@@ -51,6 +51,34 @@ public class SocialMediaService {
     }
 
     @Transactional
+    public SocialMediaPlatform updatePlatform(String username, Long platformId, SocialMediaRequest request) {
+        SocialMediaPlatform platform = socialMediaPlatformRepository.findById(platformId)
+                .orElseThrow(() -> new RuntimeException("Platform bulunamadı.."));
+
+        if (!platform.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu işlem için yetkiniz yok.");
+        }
+
+        if (request.getPlatform() != null) {
+            platform.setPlatform(request.getPlatform());
+        }
+        if (request.getUsername() != null) {
+            platform.setUsername(request.getUsername());
+        }
+        if (request.getIsPublic() != null) {
+            platform.setIsPublic(request.getIsPublic());
+        }
+
+        if (request.getUrl() != null && !request.getUrl().isBlank()) {
+            platform.setUrl(request.getUrl());
+        } else {
+            platform.updateUrlByUsername();
+        }
+
+        return socialMediaPlatformRepository.save(platform);
+    }
+
+    @Transactional
     public void deletePlatform(String username, Long platformId) {
         SocialMediaPlatform platform = socialMediaPlatformRepository.findById(platformId)
                 .orElseThrow(() -> new RuntimeException("Platform bulunamadı.."));
