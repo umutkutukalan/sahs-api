@@ -13,5 +13,6 @@ public class UserDTO {
     private String surname;
     private String slug;
     private String profileImg;
+    private String coverImg;
     private String role;
 }
