@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.dto.UserDTO;
+import com.sahnesen.api.sahnesen.entities.InviteCode;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.enums.ThemeType;
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final InviteCodeService inviteCodeService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -68,8 +70,13 @@ public class UserService {
 
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
-        // 1. Güvenlik Kontrolü: Eskiden findAll kullanıyordun, şimdi exists
-        // kullanıyoruz
+        // 1. Davet Kodu Doğrulaması (KOD GEÇERSİZDİRSE İŞLEM BURADA PATLAR VE
+        // İLERLEMEZ)
+        // Bu işlem kodun usedCount değerini 1 artırır ve güncellenmiş InviteCode'u
+        // döner.
+        InviteCode usedCode = inviteCodeService.validateAndUseCode(request.getInviteCode());
+
+        // 2. Güvenlik Kontrolleri
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Bu e-posta adresi zaten kullanımda.");
         }
@@ -77,24 +84,26 @@ public class UserService {
             throw new RuntimeException("Bu kullanıcı adı zaten alınmış.");
         }
 
-        // 2. İnşa Süreci: Builder kullanımı (UserRegisterRequest burada kullanılıyor)
+        // 3. User İnşa Süreci
         User user = User.builder()
                 .name(request.getName())
                 .surname(request.getSurname())
                 .email(request.getEmail())
                 .username(request.getUsername().toLowerCase())
-                .slug(request.getUsername().toLowerCase()) // Slug'ı username'e bağladık
+                .slug(request.getUsername().toLowerCase())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .accountStatus(AccountStatus.ACTIVE)
+                // Eğer User Entity'ne usedInviteCode alanını eklediysen:
+                // .usedInviteCode(usedCode)
                 .build();
 
-        // 3. Veritabanına Yazma
+        // 4. Veritabanına Yazma
         User savedUser = userRepository.save(user);
 
-        // 4. Entity -> DTO Dönüşümü
+        // 5. Entity -> DTO Dönüşümü
         UserDTO userDto = convertToDto(savedUser);
 
-        // 5. Token Üretimi ve Yanıt İnsası
+        // 6. Token Üretimi ve Yanıt İnsası
         String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole().name());
 
         return AuthResponse.builder()
