@@ -24,4 +24,7 @@ public class UserRegisterRequest {
     @NotBlank(message = "Şifre alanı boş bırakılamaz")
     @Size(min = 8, message = "Şifre en az 8 karakter olmalıdır")
     private String password;
+
+    @NotBlank(message = "Kurucu Sahne Davet kodu alanı boş bırakılamaz")
+    private String inviteCode;
 }
