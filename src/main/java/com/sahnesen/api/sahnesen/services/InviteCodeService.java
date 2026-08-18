@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.entities.InviteCode;
 import com.sahnesen.api.sahnesen.repository.InviteCodeRepository;
+import com.sahnesen.api.sahnesen.util.InviteCodeGenerator;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,25 @@ public class InviteCodeService {
 
         // Kullanım sayısını 1 artırıyoruz
         inviteCode.setUsedCount(inviteCode.getUsedCount() + 1);
+        return inviteCodeRepository.save(inviteCode);
+    }
+
+    @Transactional
+    public InviteCode createPersonalInviteCode(String description, Long createdByUserId) {
+        String code;
+        // Çakışma (Collision) olmayana kadar rastgele kod üretir
+        do {
+            code = InviteCodeGenerator.generateCode("SAHNE-", 6);
+        } while (inviteCodeRepository.existsByCode(code));
+
+        InviteCode inviteCode = InviteCode.builder()
+                .code(code)
+                .description(description) // Örn: "Umut'un arkadaşı için özel davetiye"
+                .maxUses(1) // Kişiye özel tek kullanımlık
+                .usedCount(0)
+                .isActive(true)
+                .build();
+
         return inviteCodeRepository.save(inviteCode);
     }
 }
