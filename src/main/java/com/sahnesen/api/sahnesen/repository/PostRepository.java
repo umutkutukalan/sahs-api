@@ -31,4 +31,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     // 30 gündür güncellenmemiş ve hala yayınlanmamış taslakları bulmak için
     List<Post> findAllByIsPublishedFalseAndUpdatedAtBefore(LocalDateTime dateTime);
+
+    // Belirli bir kullanıcının isPublished durumuna göre yazılarını getir
+    // (Taslak/Yayınlanan filtresi için)
+    Page<Post> findAllByUser_UsernameAndIsPublishedOrderByCreatedAtDesc(String username, boolean isPublished,
+            Pageable pageable);
+
 }

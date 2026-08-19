@@ -51,9 +51,15 @@ public class PostController {
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
     // görmesi için
 
+    // Sadece giriş yapan kullanıcının kendi postlarını filtresine göre getirir
     @GetMapping("/me")
-    public ResponseEntity<Page<PostResponse>> getMyAllPosts(Principal principal, Pageable pageable) {
-        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), pageable));
+    public ResponseEntity<Page<PostResponse>> getMyPosts(
+            @RequestParam(required = false) Boolean isPublished, // 'isPublic' yerine DTO'daki gibi 'isPublished'
+                                                                 // yapalım
+            Principal principal,
+            Pageable pageable) {
+
+        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, pageable));
     }
 
     @PutMapping("/me/{postId}")

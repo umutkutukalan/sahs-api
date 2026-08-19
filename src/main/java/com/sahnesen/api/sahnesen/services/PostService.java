@@ -101,9 +101,22 @@ public class PostService {
 
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
     // görmesi için
-    public Page<PostResponse> getMyOwnPosts(String username, Pageable pageable) {
-        return postRepository.findAllByUser_UsernameOrderByCreatedAtDesc(username, pageable)
-                .map(this::convertToResponse);
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, Pageable pageable) {
+        Page<Post> posts;
+
+        if (isPublished == null) {
+            // isPublished parametresi atılmadıysa (örn: /api/posts/me) kullanıcının TÜM
+            // yazılarını getir
+            posts = postRepository.findAllByUser_UsernameOrderByCreatedAtDesc(username, pageable);
+        } else {
+            // isPublished true veya false geldiyse (örn: /api/posts/me?isPublished=false)
+            // filtrele
+            posts = postRepository.findAllByUser_UsernameAndIsPublishedOrderByCreatedAtDesc(username, isPublished,
+                    pageable);
+        }
+
+        return posts.map(this::convertToResponse);
     }
 
     @CacheEvict(value = "postBySlug", key = "#result.slug") // Güncellenen postun slug'ını cache'den sil
@@ -115,7 +128,8 @@ public class PostService {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
 
-        Post savedPost = postRepository.save(post); // Güncellenmiş postu kaydetmeden önce slug'ı güncellememiz gerekiyor
+        Post savedPost = postRepository.save(post); // Güncellenmiş postu kaydetmeden önce slug'ı güncellememiz
+                                                    // gerekiyor
 
         // Eğer post henüz yayınlanmadıysa, başlık her değiştiğinde slug'ı da güncelle
         if (!savedPost.isPublished() && !post.getTitle().equals(request.getTitle())) {
