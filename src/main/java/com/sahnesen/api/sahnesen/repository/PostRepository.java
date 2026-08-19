@@ -12,29 +12,23 @@ import com.sahnesen.api.sahnesen.entities.Post;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    // Belirli bir kullanıcının yayınlanmış yazılarını getir (Profil sayfası için)
-    Page<Post> findAllByUser_UsernameAndIsPublishedTrueOrderByCreatedAtDesc(String username, Pageable pageable);
+    // 1. Yayınlanmış tüm yazılar (Ana Sayfa Akışı)
+    Page<Post> findAllByIsPublishedTrue(Pageable pageable);
 
-    // Tüm yayınlanmış yazıları getir (Ana sayfa akışı için)
-    Page<Post> findAllByIsPublishedTrueOrderByCreatedAtDesc(Pageable pageable);
+    // 2. Belirli bir kullanıcının yayınlanmış yazıları (Profil Sayfası)
+    Page<Post> findAllByUser_UsernameAndIsPublishedTrue(String username, Pageable pageable);
 
-    // Belirli bir kullanıcının tüm yazılarını getir (Yazarın kendi yönetim paneli
-    // için)
-    Page<Post> findAllByUser_UsernameOrderByCreatedAtDesc(String username, Pageable pageable);
+    // 3. Kullanıcının yayınlanma durumuna göre yazıları (Taslak / Yayınlanan)
+    Page<Post> findAllByUser_UsernameAndIsPublished(String username, boolean isPublished, Pageable pageable);
+
+    // 4. Belirli bir kullanıcının tüm yazıları
+    Page<Post> findAllByUser_Username(String username, Pageable pageable);
 
     Optional<Post> findBySlug(String slug);
 
     Optional<Post> findBySlugAndIsPublishedTrue(String slug);
 
-    // Slug çakışması var mı kontrolü
     boolean existsBySlug(String slug);
 
-    // 30 gündür güncellenmemiş ve hala yayınlanmamış taslakları bulmak için
     List<Post> findAllByIsPublishedFalseAndUpdatedAtBefore(LocalDateTime dateTime);
-
-    // Belirli bir kullanıcının isPublished durumuna göre yazılarını getir
-    // (Taslak/Yayınlanan filtresi için)
-    Page<Post> findAllByUser_UsernameAndIsPublishedOrderByCreatedAtDesc(String username, boolean isPublished,
-            Pageable pageable);
-
 }

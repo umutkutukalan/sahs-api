@@ -106,14 +106,11 @@ public class PostService {
         Page<Post> posts;
 
         if (isPublished == null) {
-            // isPublished parametresi atılmadıysa (örn: /api/posts/me) kullanıcının TÜM
-            // yazılarını getir
-            posts = postRepository.findAllByUser_UsernameOrderByCreatedAtDesc(username, pageable);
+            // isPublished parametresi gelmediyse kullanicinin TUM yazilarini getir
+            posts = postRepository.findAllByUser_Username(username, pageable);
         } else {
-            // isPublished true veya false geldiyse (örn: /api/posts/me?isPublished=false)
-            // filtrele
-            posts = postRepository.findAllByUser_UsernameAndIsPublishedOrderByCreatedAtDesc(username, isPublished,
-                    pageable);
+            // isPublished true veya false ise filtrele
+            posts = postRepository.findAllByUser_UsernameAndIsPublished(username, isPublished, pageable);
         }
 
         return posts.map(this::convertToResponse);
@@ -168,14 +165,17 @@ public class PostService {
 
     // ----
 
-    // Genel Akış (Herkes görebilir)
+    // Genel Akis (Herkes gorebilir - Yalnizca yayinlanmis içerikler)
+    @Transactional(readOnly = true)
     public Page<PostResponse> getAllPublishedPosts(Pageable pageable) {
-        return postRepository.findAllByIsPublishedTrueOrderByCreatedAtDesc(pageable).map(this::convertToResponse);
+        return postRepository.findAllByIsPublishedTrue(pageable)
+                .map(this::convertToResponse);
     }
 
-    // Profil sayfası için, sadece o kullanıcıya ait ve yayınlanmış postları getir
+    // Profil Sayfasi (Sadece o kullaniciya ait ve yayinlanmis postlar)
+    @Transactional(readOnly = true)
     public Page<PostResponse> getUserPosts(String username, Pageable pageable) {
-        return postRepository.findAllByUser_UsernameAndIsPublishedTrueOrderByCreatedAtDesc(username, pageable)
+        return postRepository.findAllByUser_UsernameAndIsPublishedTrue(username, pageable)
                 .map(this::convertToResponse);
     }
 

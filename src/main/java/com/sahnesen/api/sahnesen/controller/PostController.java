@@ -3,9 +3,11 @@ package com.sahnesen.api.sahnesen.controller;
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
+import org.springframework.data.domain.Sort;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
-import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.FileService;
 import com.sahnesen.api.sahnesen.services.PostService;
@@ -48,17 +49,12 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedPost);
     }
 
-    // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
-    // görmesi için
-
-    // Sadece giriş yapan kullanıcının kendi postlarını filtresine göre getirir
+    // Yazarın Kendi Gönderileri / Taslakları
     @GetMapping("/me")
     public ResponseEntity<Page<PostResponse>> getMyPosts(
-            @RequestParam(required = false) Boolean isPublished, // 'isPublic' yerine DTO'daki gibi 'isPublished'
-                                                                 // yapalım
             Principal principal,
-            Pageable pageable) {
-
+            @RequestParam(required = false) Boolean isPublished,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, pageable));
     }
 
@@ -96,15 +92,16 @@ public class PostController {
 
     // Genel Akış (Herkes görebilir)
     @GetMapping
-    public ResponseEntity<Page<PostResponse>> getAllPosts(Pageable pageable) {
+    public ResponseEntity<Page<PostResponse>> getAllPosts(
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(postService.getAllPublishedPosts(pageable));
     }
 
-    // Kullanıcıya Özel Akış (Profil sayfası için)
+    // Kullaniciya Ozel Akis (Profil sayfasi için)
     @GetMapping("/user/{username}")
     public ResponseEntity<Page<PostResponse>> getUserPosts(
             @PathVariable String username,
-            Pageable pageable) {
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(postService.getUserPosts(username, pageable));
     }
 
