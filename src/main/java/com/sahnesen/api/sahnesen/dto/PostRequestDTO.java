@@ -2,6 +2,7 @@ package com.sahnesen.api.sahnesen.dto;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sahnesen.api.sahnesen.enums.PostType;
 
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +25,7 @@ public class PostRequestDTO {
 
     private String coverImage; // Opsiyonel Kapak Fotoğrafı URL'i
 
+    @JsonProperty("isPublished") // Jackson'ın 'is' ekini yutmasını engeller
     private boolean isPublished = false; // Direkt yayınlamak mı isteriz yoksa taslak mı kalsın?
 
 }
