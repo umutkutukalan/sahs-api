@@ -93,8 +93,7 @@ public class UserService {
                 .slug(request.getUsername().toLowerCase())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .accountStatus(AccountStatus.ACTIVE)
-                // Eğer User Entity'ne usedInviteCode alanını eklediysen:
-                // .usedInviteCode(usedCode)
+                .usedInviteCode(usedCode)
                 .build();
 
         // 4. Veritabanına Yazma

@@ -21,9 +21,12 @@ import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
@@ -65,7 +68,8 @@ public class User {
     private String bio;
     private String motto;
 
-    // Görsel Alanlar - artık sadece dosya isimlerini tutacağız, gerçek dosyalar FileStorageService tarafından yönetilecek
+    // Görsel Alanlar - artık sadece dosya isimlerini tutacağız, gerçek dosyalar
+    // FileStorageService tarafından yönetilecek
     private String profileImg;
     private String coverImg;
 
@@ -118,6 +122,10 @@ public class User {
     public boolean canCreatePaidContent() {
         return this.getMetrics().getBadges().contains(BadgeType.STAGE_DUST);
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "used_invite_code_id")
+    private InviteCode usedInviteCode;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
