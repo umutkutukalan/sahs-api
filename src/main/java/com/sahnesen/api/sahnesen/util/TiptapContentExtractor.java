@@ -1,8 +1,11 @@
 package com.sahnesen.api.sahnesen.util;
 
+import org.springframework.stereotype.Component;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@Component
 public class TiptapContentExtractor {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
