@@ -7,8 +7,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import com.sahnesen.api.sahnesen.entities.Post;
+import com.sahnesen.api.sahnesen.enums.PostType;
+
+import io.lettuce.core.dynamic.annotation.Param;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
@@ -31,4 +35,25 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     boolean existsBySlug(String slug);
 
     List<Post> findAllByIsPublishedFalseAndUpdatedAtBefore(LocalDateTime dateTime);
+
+    // --------------
+
+    // 1. Genel Akış (Filtreli / Filtresiz)
+    @Query("SELECT p FROM Post p WHERE p.isPublished = true AND (:type IS NULL OR p.type = :type)")
+    Page<Post> findAllPublishedWithFilter(@Param("type") PostType type, Pageable pageable);
+
+    // 2. Profil Sayfası (Filtreli / Filtresiz)
+    @Query("SELECT p FROM Post p WHERE p.user.username = :username AND p.isPublished = true AND (:type IS NULL OR p.type = :type)")
+    Page<Post> findByUserUsernameAndPublishedWithFilter(@Param("username") String username,
+            @Param("type") PostType type, Pageable pageable);
+
+    // 3. Kullanıcının Kendi Yazıları / Taslakları (Filtreli / Filtresiz)
+    @Query("SELECT p FROM Post p WHERE p.user.username = :username " +
+            "AND (:isPublished IS NULL OR p.isPublished = :isPublished) " +
+            "AND (:type IS NULL OR p.type = :type)")
+    Page<Post> findMyOwnPostsWithFilter(@Param("username") String username,
+            @Param("isPublished") Boolean isPublished,
+            @Param("type") PostType type,
+            Pageable pageable);
+
 }

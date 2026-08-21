@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
+import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.FileService;
 import com.sahnesen.api.sahnesen.services.PostService;
@@ -54,8 +55,9 @@ public class PostController {
     public ResponseEntity<Page<PostResponse>> getMyPosts(
             Principal principal,
             @RequestParam(required = false) Boolean isPublished,
+            @RequestParam(required = false) PostType type,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, pageable));
+        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, type, pageable));
     }
 
     @PutMapping("/me/{postId}")
@@ -93,16 +95,18 @@ public class PostController {
     // Genel Akış (Herkes görebilir)
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
+            @RequestParam(required = false) PostType type,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getAllPublishedPosts(pageable));
+        return ResponseEntity.ok(postService.getAllPublishedPosts(type, pageable));
     }
 
-    // Kullaniciya Ozel Akis (Profil sayfasi için)
+    // Kullanıcıya Özel Akış (Profil sayfası için)
     @GetMapping("/user/{username}")
     public ResponseEntity<Page<PostResponse>> getUserPosts(
             @PathVariable String username,
+            @RequestParam(required = false) PostType type,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getUserPosts(username, pageable));
+        return ResponseEntity.ok(postService.getUserPosts(username, type, pageable));
     }
 
     @GetMapping("/{slug}")

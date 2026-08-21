@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.User;
+import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.response.PostResponse;
@@ -102,18 +103,9 @@ public class PostService {
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
     // görmesi için
     @Transactional(readOnly = true)
-    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, Pageable pageable) {
-        Page<Post> posts;
-
-        if (isPublished == null) {
-            // isPublished parametresi gelmediyse kullanicinin TUM yazilarini getir
-            posts = postRepository.findAllByUser_Username(username, pageable);
-        } else {
-            // isPublished true veya false ise filtrele
-            posts = postRepository.findAllByUser_UsernameAndIsPublished(username, isPublished, pageable);
-        }
-
-        return posts.map(this::convertToResponse);
+    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, PostType type, Pageable pageable) {
+        return postRepository.findMyOwnPostsWithFilter(username, isPublished, type, pageable)
+                .map(this::convertToResponse);
     }
 
     @CacheEvict(value = "postBySlug", key = "#result.slug") // Güncellenen postun slug'ını cache'den sil
@@ -167,15 +159,15 @@ public class PostService {
 
     // Genel Akis (Herkes gorebilir - Yalnizca yayinlanmis içerikler)
     @Transactional(readOnly = true)
-    public Page<PostResponse> getAllPublishedPosts(Pageable pageable) {
-        return postRepository.findAllByIsPublishedTrue(pageable)
+    public Page<PostResponse> getAllPublishedPosts(PostType type, Pageable pageable) {
+        return postRepository.findAllPublishedWithFilter(type, pageable)
                 .map(this::convertToResponse);
     }
 
-    // Profil Sayfasi (Sadece o kullaniciya ait ve yayinlanmis postlar)
+    // Profil Sayfasi
     @Transactional(readOnly = true)
-    public Page<PostResponse> getUserPosts(String username, Pageable pageable) {
-        return postRepository.findAllByUser_UsernameAndIsPublishedTrue(username, pageable)
+    public Page<PostResponse> getUserPosts(String username, PostType type, Pageable pageable) {
+        return postRepository.findByUserUsernameAndPublishedWithFilter(username, type, pageable)
                 .map(this::convertToResponse);
     }
 
