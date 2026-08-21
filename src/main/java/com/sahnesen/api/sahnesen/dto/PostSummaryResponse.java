@@ -6,6 +6,7 @@ import com.sahnesen.api.sahnesen.enums.PostType;
 
 public record PostSummaryResponse(
                 String title,
+                String subtitle,
                 String slug,
                 String coverImage,
                 PostType postType,

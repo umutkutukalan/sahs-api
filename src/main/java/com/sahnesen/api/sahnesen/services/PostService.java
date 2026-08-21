@@ -56,36 +56,49 @@ public class PostService {
 
         String slug = SlugUtil.generateSlug(request.getTitle());
         if (postRepository.existsBySlug(slug)) {
-            // Slug zaten varsa, benzersiz hale getirmek için zaman damgası ekleyebiliriz
             slug = slug + "-" + System.currentTimeMillis() % 1000;
         }
 
         String jsonContentString;
         try {
-            // Map nesnesini geçerli, tırnak işaretli bir JSON String'ine dönüştürüyoruz!
             jsonContentString = objectMapper.writeValueAsString(request.getContent());
         } catch (Exception e) {
             throw new RuntimeException("İçerik JSON formatına dönüştürülemedi: " + e.getMessage());
+        }
+
+        // 💡 1. Cover Image belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        String finalCoverImage = request.getCoverImage();
+        if (finalCoverImage == null || finalCoverImage.isBlank()) {
+            finalCoverImage = tiptapContentExtractor.extractFirstImage(jsonContentString);
+        }
+
+        // 💡 2. Subtitle belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        String finalSubtitle = request.getSubtitle();
+        if (finalSubtitle == null || finalSubtitle.isBlank()) {
+            finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
         }
 
         // 3. Post nesnesini inşa et
         Post post = Post.builder()
                 .postType(request.getPostType())
                 .title(request.getTitle())
+                .subtitle(finalSubtitle) // 🔥 Yeni eklenen dinamik subtitle
                 .slug(slug)
-                .content(jsonContentString) // Buraya artık geçerli JSON string gidiyor!
-                .coverImage(request.getCoverImage())
+                .content(jsonContentString)
+                .coverImage(finalCoverImage) // 🔥 Dinamik veya gelen coverImage
                 .user(user)
                 .isPublished(request.isPublished())
                 .build();
 
         Post savedPost = postRepository.save(post);
 
-        // ID artık elimizde, klasörü fiziksel olarak oluşturabiliriz
         fileService.createPostFolder(savedPost.getId());
 
         if (savedPost.isPublished()) {
-            notificationService.notifyFollowers(user.getId(), user.getUsername(), savedPost.getTitle(),
+            notificationService.notifyFollowers(
+                    user.getId(),
+                    user.getUsername(),
+                    savedPost.getTitle(),
                     savedPost.getSlug());
         }
 
@@ -239,6 +252,7 @@ public class PostService {
     private PostSummaryResponse convertToSummaryResponse(Post post) {
         return new PostSummaryResponse(
                 post.getTitle(),
+                post.getSubtitle(),
                 post.getSlug(),
                 post.getCoverImage(),
                 post.getPostType(),
@@ -256,6 +270,7 @@ public class PostService {
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
+                .subtitle(post.getSubtitle())
                 .slug(post.getSlug())
                 .content(post.getContent())
                 .coverImage(post.getCoverImage())

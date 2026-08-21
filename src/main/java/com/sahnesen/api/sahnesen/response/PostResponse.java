@@ -13,14 +13,15 @@ import lombok.NoArgsConstructor;
 
 @Data
 @Builder
-@NoArgsConstructor //Jackson için boş constructor
-@AllArgsConstructor  //Builder için tüm argümanları içeren constructor
+@NoArgsConstructor // Jackson için boş constructor
+@AllArgsConstructor // Builder için tüm argümanları içeren constructor
 public class PostResponse implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     private Long id;
     private String title;
+    private String subtitle;
     private String slug;
     private String content;
     private String coverImage;
