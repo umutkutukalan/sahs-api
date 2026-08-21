@@ -26,6 +26,7 @@ import com.sahnesen.api.sahnesen.repository.PostRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.util.SlugUtil;
+import com.sahnesen.api.sahnesen.util.TiptapContentExtractor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class PostService {
     private HttpServletRequest request; // WebSocket bağlantısında kullanmak üzere ekliyoruz
 
     private final PostRepository postRepository;
+    private final TiptapContentExtractor tiptapContentExtractor;
     private final UserRepository userRepository;
     private final NotificationService notificationService; // Post oluşturulduğunda bildirim göndermek için ekliyoruz
     private final FileService fileService; // Dosya işlemleri için ekliyoruz
@@ -123,7 +125,7 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
-    @CacheEvict(value = "postBySlug", key = "#result.slug") // Güncellenen postun slug'ını cache'den sil
+    @CacheEvict(value = "postBySlug", key = "#result.slug")
     public PostResponse updatePost(String username, Long postId, PostRequestDTO request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
@@ -132,16 +134,16 @@ public class PostService {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
 
-        Post savedPost = postRepository.save(post); // Güncellenmiş postu kaydetmeden önce slug'ı güncellememiz
-                                                    // gerekiyor
-
-        // Eğer post henüz yayınlanmadıysa, başlık her değiştiğinde slug'ı da güncelle
-        if (!savedPost.isPublished() && !post.getTitle().equals(request.getTitle())) {
+        // 1. Eğer post henüz yayınlanmadıysa ve başlık değiştiyse slug'ı güncelle
+        if (!post.isPublished() && !post.getTitle().equals(request.getTitle())) {
             String newSlug = SlugUtil.generateSlug(request.getTitle());
-            // Çakışma kontrolü gerekebilir (createPost'taki mantıkla aynı)
+            if (postRepository.existsBySlug(newSlug)) {
+                newSlug = newSlug + "-" + System.currentTimeMillis() % 1000;
+            }
             post.setSlug(newSlug);
         }
 
+        // 2. Content Map'i String JSON'a dönüştür
         String jsonContentString;
         try {
             jsonContentString = objectMapper.writeValueAsString(request.getContent());
@@ -149,13 +151,30 @@ public class PostService {
             throw new RuntimeException("İçerik JSON formatına dönüştürülemedi: " + e.getMessage());
         }
 
+        // 💡 3. Cover Image belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        String finalCoverImage = request.getCoverImage();
+        if (finalCoverImage == null || finalCoverImage.isBlank()) {
+            finalCoverImage = tiptapContentExtractor.extractFirstImage(jsonContentString);
+        }
+
+        // 💡 4. Subtitle belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        String finalSubtitle = request.getSubtitle();
+        if (finalSubtitle == null || finalSubtitle.isBlank()) {
+            finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
+        }
+
+        // 5. Alanları güncelle
         post.setTitle(request.getTitle());
+        post.setSubtitle(finalSubtitle); // 🔥 Güncel alt başlık
         post.setContent(jsonContentString);
-        post.setCoverImage(request.getCoverImage());
+        post.setCoverImage(finalCoverImage); // 🔥 Güncel kapak görseli
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());
 
-        return convertToResponse(postRepository.save(post));
+        // 6. Tek ve nihai kayıt
+        Post savedPost = postRepository.save(post);
+
+        return convertToResponse(savedPost);
     }
 
     public void deletePost(String username, Long postId) {

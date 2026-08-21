@@ -20,6 +20,9 @@ public class PostRequestDTO {
     @Size(min = 3, max = 150, message = "Başlık 3 ile 150 karakter arasında olmalıdır.")
     private String title;
 
+    @Size(max = 250, message = "Alt başlık en fazla 250 karakter olmalıdır.")
+    private String subtitle; // 🔥 Yeni alan: Kullanıcı elle girebilir veya JSON'dan çıkarılabilir
+
     @NotNull(message = "İçerik boş olamaz.")
     private Map<String, Object> content; // Tiptap JSON String
 
