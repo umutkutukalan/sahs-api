@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
+import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.PostType;
@@ -160,16 +161,16 @@ public class PostService {
 
     // Genel Akis (Herkes gorebilir - Yalnizca yayinlanmis içerikler)
     @Transactional(readOnly = true)
-    public Page<PostResponse> getAllPublishedPosts(PostType postType, Pageable pageable) {
-        return postRepository.findAllPublishedWithFilter(postType, pageable)
-                .map(this::convertToResponse);
+    public Page<PostSummaryResponse> getAllPublishedPosts(PostType type, Pageable pageable) {
+        return postRepository.findAllPublishedWithFilter(type, pageable)
+                .map(this::convertToSummaryResponse);
     }
 
     // Profil Sayfasi
     @Transactional(readOnly = true)
-    public Page<PostResponse> getUserPosts(String username, PostType postType, Pageable pageable) {
-        return postRepository.findByUserUsernameAndPublishedWithFilter(username, postType, pageable)
-                .map(this::convertToResponse);
+    public Page<PostSummaryResponse> getUserPosts(String username, PostType type, Pageable pageable) {
+        return postRepository.findByUserUsernameAndPublishedWithFilter(username, type, pageable)
+                .map(this::convertToSummaryResponse);
     }
 
     @Transactional(readOnly = true)
@@ -232,6 +233,24 @@ public class PostService {
         // kadar slug'ı çekiyoruz
         Set<String> range = redisTemplate.opsForZSet().reverseRange(TRENDING_KEY, 0, limit - 1);
         return new ArrayList<>(range != null ? range : Collections.emptyList());
+    }
+
+    // 💡 HAFİF DTO DÖNÜŞTÜRÜCÜ (Content Yok!)
+    private PostSummaryResponse convertToSummaryResponse(Post post) {
+        return new PostSummaryResponse(
+                post.getId(),
+                post.getTitle(),
+                post.getSlug(),
+                post.getCoverImage(),
+                post.getPostType(),
+                post.getCreatedAt(),
+                post.getViewCount(),
+                post.getUser().getName(),
+                post.getUser().getSurname(),
+                post.getUser().getUsername(),
+                post.getUser().getProfileImg()
+        // 🚫 post.getContent() BURAYA EKLENMİYOR!
+        );
     }
 
     private PostResponse convertToResponse(Post post) {

@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
+import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.FileService;
@@ -94,7 +95,7 @@ public class PostController {
 
     // Genel Akış (Herkes görebilir)
     @GetMapping
-    public ResponseEntity<Page<PostResponse>> getAllPosts(
+    public ResponseEntity<Page<PostSummaryResponse>> getAllPosts(
             @RequestParam(required = false) PostType postType,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(postService.getAllPublishedPosts(postType, pageable));
@@ -102,7 +103,7 @@ public class PostController {
 
     // Kullanıcıya Özel Akış (Profil sayfası için)
     @GetMapping("/user/{username}")
-    public ResponseEntity<Page<PostResponse>> getUserPosts(
+    public ResponseEntity<Page<PostSummaryResponse>> getUserPosts(
             @PathVariable String username,
             @RequestParam(required = false) PostType postType,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {

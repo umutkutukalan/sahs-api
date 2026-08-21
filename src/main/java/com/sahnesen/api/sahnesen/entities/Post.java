@@ -44,6 +44,8 @@ public class Post {
     @Column(nullable = false)
     private String title;
 
+    private String subtitle;
+
     @Column(unique = true, nullable = false)
     private String slug;
 
