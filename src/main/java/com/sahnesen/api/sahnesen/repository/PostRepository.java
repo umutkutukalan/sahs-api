@@ -8,11 +8,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.enums.PostType;
-
-import io.lettuce.core.dynamic.annotation.Param;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
@@ -39,21 +38,21 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // --------------
 
     // 1. Genel Akış (Filtreli / Filtresiz)
-    @Query("SELECT p FROM Post p WHERE p.isPublished = true AND (:type IS NULL OR p.type = :type)")
-    Page<Post> findAllPublishedWithFilter(@Param("type") PostType type, Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE p.isPublished = true AND (:postType IS NULL OR p.postType = :postType)")
+    Page<Post> findAllPublishedWithFilter(@Param("postType") PostType postType, Pageable pageable);
 
     // 2. Profil Sayfası (Filtreli / Filtresiz)
-    @Query("SELECT p FROM Post p WHERE p.user.username = :username AND p.isPublished = true AND (:type IS NULL OR p.type = :type)")
+    @Query("SELECT p FROM Post p WHERE p.user.username = :username AND p.isPublished = true AND (:postType IS NULL OR p.postType = :postType)")
     Page<Post> findByUserUsernameAndPublishedWithFilter(@Param("username") String username,
-            @Param("type") PostType type, Pageable pageable);
+            @Param("postType") PostType postType, Pageable pageable);
 
     // 3. Kullanıcının Kendi Yazıları / Taslakları (Filtreli / Filtresiz)
     @Query("SELECT p FROM Post p WHERE p.user.username = :username " +
             "AND (:isPublished IS NULL OR p.isPublished = :isPublished) " +
-            "AND (:type IS NULL OR p.type = :type)")
+            "AND (:postType IS NULL OR p.postType = :postType)")
     Page<Post> findMyOwnPostsWithFilter(@Param("username") String username,
             @Param("isPublished") Boolean isPublished,
-            @Param("type") PostType type,
+            @Param("postType") PostType postType,
             Pageable pageable);
 
 }

@@ -55,9 +55,9 @@ public class PostController {
     public ResponseEntity<Page<PostResponse>> getMyPosts(
             Principal principal,
             @RequestParam(required = false) Boolean isPublished,
-            @RequestParam(required = false) PostType type,
+            @RequestParam(required = false) PostType postType,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, type, pageable));
+        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, postType, pageable));
     }
 
     @PutMapping("/me/{postId}")
@@ -95,18 +95,18 @@ public class PostController {
     // Genel Akış (Herkes görebilir)
     @GetMapping
     public ResponseEntity<Page<PostResponse>> getAllPosts(
-            @RequestParam(required = false) PostType type,
+            @RequestParam(required = false) PostType postType,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getAllPublishedPosts(type, pageable));
+        return ResponseEntity.ok(postService.getAllPublishedPosts(postType, pageable));
     }
 
     // Kullanıcıya Özel Akış (Profil sayfası için)
     @GetMapping("/user/{username}")
     public ResponseEntity<Page<PostResponse>> getUserPosts(
             @PathVariable String username,
-            @RequestParam(required = false) PostType type,
+            @RequestParam(required = false) PostType postType,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getUserPosts(username, type, pageable));
+        return ResponseEntity.ok(postService.getUserPosts(username, postType, pageable));
     }
 
     @GetMapping("/{slug}")

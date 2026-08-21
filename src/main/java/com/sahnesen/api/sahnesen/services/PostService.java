@@ -103,8 +103,9 @@ public class PostService {
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
     // görmesi için
     @Transactional(readOnly = true)
-    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, PostType type, Pageable pageable) {
-        return postRepository.findMyOwnPostsWithFilter(username, isPublished, type, pageable)
+    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, PostType postType,
+            Pageable pageable) {
+        return postRepository.findMyOwnPostsWithFilter(username, isPublished, postType, pageable)
                 .map(this::convertToResponse);
     }
 
@@ -159,15 +160,15 @@ public class PostService {
 
     // Genel Akis (Herkes gorebilir - Yalnizca yayinlanmis içerikler)
     @Transactional(readOnly = true)
-    public Page<PostResponse> getAllPublishedPosts(PostType type, Pageable pageable) {
-        return postRepository.findAllPublishedWithFilter(type, pageable)
+    public Page<PostResponse> getAllPublishedPosts(PostType postType, Pageable pageable) {
+        return postRepository.findAllPublishedWithFilter(postType, pageable)
                 .map(this::convertToResponse);
     }
 
     // Profil Sayfasi
     @Transactional(readOnly = true)
-    public Page<PostResponse> getUserPosts(String username, PostType type, Pageable pageable) {
-        return postRepository.findByUserUsernameAndPublishedWithFilter(username, type, pageable)
+    public Page<PostResponse> getUserPosts(String username, PostType postType, Pageable pageable) {
+        return postRepository.findByUserUsernameAndPublishedWithFilter(username, postType, pageable)
                 .map(this::convertToResponse);
     }
 
