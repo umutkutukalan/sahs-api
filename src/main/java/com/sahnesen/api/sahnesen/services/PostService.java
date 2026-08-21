@@ -238,7 +238,6 @@ public class PostService {
     // 💡 HAFİF DTO DÖNÜŞTÜRÜCÜ (Content Yok!)
     private PostSummaryResponse convertToSummaryResponse(Post post) {
         return new PostSummaryResponse(
-                post.getId(),
                 post.getTitle(),
                 post.getSlug(),
                 post.getCoverImage(),
