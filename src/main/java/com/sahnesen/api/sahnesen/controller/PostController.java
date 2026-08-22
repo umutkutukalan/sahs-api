@@ -111,8 +111,12 @@ public class PostController {
     }
 
     @GetMapping("/{slug}")
-    public ResponseEntity<PostResponse> getPostDetail(@PathVariable String slug) {
-        return ResponseEntity.ok(postService.getPostWithViewCount(slug));
+    public ResponseEntity<PostResponse> getPostDetail(
+            @PathVariable String slug,
+            Principal principal) {
+
+        String currentUsername = (principal != null) ? principal.getName() : null;
+        return ResponseEntity.ok(postService.getPostWithViewCount(slug, currentUsername));
     }
 
     @GetMapping("/trending")

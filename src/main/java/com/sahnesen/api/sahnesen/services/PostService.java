@@ -206,20 +206,29 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "postBySlug", key = "#slug")
-    public PostResponse getPostBySlug(String slug) {
-        // Bu metodun içine sadece ilk seferde girecek
-        // Sonraki isteklerde Spring, Redis'e bakıp sonucu oradan dönecek
+    @Cacheable(value = "postBySlug", key = "#slug", condition = "#currentUsername == null", // Sadece anonim/genel okuma
+                                                                                            // isteklerini cache'le
+            unless = "#result == null || !#result.isPublished" // Taslak olan veya null dönen yanıtları ASLA cache'leme
+    )
+    public PostResponse getPostBySlug(String slug, String currentUsername) {
+        // 1. Önce slug ile post'u bul (isPublished şartı olmadan)
+        Post post = postRepository.findBySlug(slug)
+                .orElseThrow(() -> new RuntimeException("Yazı bulunamadı."));
 
-        System.out.println("Veritabanına gidiliyor: " + slug); // Cache mekanizmasının çalıştığını görmek için log
-                                                               // ekleyelim
+        // 2. Güvenlik ve Yayın Kontrolü:
+        // Eğer yazı yayınlanmamışsa (TASLAK) VE isteği atan kişi yazının sahibi değilse
+        // (veya anonimse) erişimi engelle!
+        boolean isOwner = currentUsername != null && currentUsername.equals(post.getUser().getUsername());
 
-        Post post = postRepository.findBySlugAndIsPublishedTrue(slug)
-                .orElseThrow(() -> new RuntimeException("Yazı bulunamadı veya henüz yayınlanmadı."));
+        if (!post.isPublished() && !isOwner) {
+            throw new RuntimeException("Bu taslağı görüntüleme yetkiniz yok.");
+        }
+
         return convertToResponse(post);
     }
 
-    public PostResponse getPostWithViewCount(String slug) {
+    public PostResponse getPostWithViewCount(String slug, String currentUsername) {
+
         /**
          * Bu metodun amacı, bir yazıya erişildiğinde o yazının görüntülenme sayısını
          * artırmak ve güncel görüntülenme sayısını döndürmektir. Redis'te her yazı için
@@ -232,29 +241,18 @@ public class PostService {
 
         long currentViewCount;
 
-        // 1. Rate Limit Kontrolü: Eğer bu IP son 10 dk içinde bu yazıya bakmadıysa
         if (isEligibleToIncreaseView(slug)) {
-            // Skoru 1 artır ve yeni skoru al
             Double newScore = redisTemplate.opsForZSet().incrementScore(TRENDING_KEY, slug, 1);
             currentViewCount = (newScore != null) ? newScore.longValue() : 1L;
 
-            // WebSocket üzerinden TÜM abonelere "Yeni sayı bu!" diye uçur
             messagingTemplate.convertAndSend("/topics/post-views/" + slug, currentViewCount);
-
-            System.out.println("İzlenme arttırıldı. Yeni sayı: " + currentViewCount);
         } else {
-            // Eğer IP kilitliyse (Limit takıldıysa), sadece mevcut skoru oku (artırma
-            // yapma)
             Double currentScore = redisTemplate.opsForZSet().score(TRENDING_KEY, slug);
             currentViewCount = (currentScore != null) ? currentScore.longValue() : 0L;
-
-            System.out.println("Rate Limit devrede. Mevcut sayı dönülüyor: " + currentViewCount);
         }
 
-        // 2. Post verisini getir (DB veya Cache'den)
-        PostResponse postResponse = getPostBySlug(slug);
-
-        // 3. Güncel izlenme sayısını response içine set et
+        // Güncellenmiş getPostBySlug metodunu çağırıyoruz
+        PostResponse postResponse = getPostBySlug(slug, currentUsername);
         postResponse.setViewCount(currentViewCount);
 
         return postResponse;
