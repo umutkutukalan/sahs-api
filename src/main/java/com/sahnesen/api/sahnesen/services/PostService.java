@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,9 +57,16 @@ public class PostService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
 
-        String slug = SlugUtil.generateSlug(request.getTitle());
-        if (postRepository.existsBySlug(slug)) {
-            slug = slug + "-" + System.currentTimeMillis() % 1000;
+        // 💡 MEDIUM TASLAK SLUG MANTIĞI:
+        // Eğer direkt yayınlanarak oluşturuluyorsa (isPublished = true) başlığa göre
+        // slug üret.
+        // Taslak olarak oluşturuluyorsa (isPublished = false) rastgele benzersiz bir
+        // hash ata.
+        String slug;
+        if (request.isPublished()) {
+            slug = generateUniqueSlugForPost(request.getTitle(), null);
+        } else {
+            slug = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         }
 
         String jsonContentString;
@@ -68,13 +76,13 @@ public class PostService {
             throw new RuntimeException("İçerik JSON formatına dönüştürülemedi: " + e.getMessage());
         }
 
-        // 💡 1. Cover Image belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        // 1. Cover Image belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
         String finalCoverImage = request.getCoverImage();
         if (finalCoverImage == null || finalCoverImage.isBlank()) {
             finalCoverImage = tiptapContentExtractor.extractFirstImage(jsonContentString);
         }
 
-        // 💡 2. Subtitle belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        // 2. Subtitle belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
         String finalSubtitle = request.getSubtitle();
         if (finalSubtitle == null || finalSubtitle.isBlank()) {
             finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
@@ -84,10 +92,10 @@ public class PostService {
         Post post = Post.builder()
                 .postType(request.getPostType())
                 .title(request.getTitle())
-                .subtitle(finalSubtitle) // 🔥 Yeni eklenen dinamik subtitle
+                .subtitle(finalSubtitle)
                 .slug(slug)
                 .content(jsonContentString)
-                .coverImage(finalCoverImage) // 🔥 Dinamik veya gelen coverImage
+                .coverImage(finalCoverImage)
                 .user(user)
                 .isPublished(request.isPublished())
                 .build();
@@ -125,7 +133,8 @@ public class PostService {
                 .map(this::convertToResponse);
     }
 
-    @CacheEvict(value = "postBySlug", key = "#result.slug")
+    @Transactional
+    @CacheEvict(value = "postBySlug", key = "#result.slug", condition = "#result != null && #result.isPublished()")
     public PostResponse updatePost(String username, Long postId, PostRequestDTO request) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
@@ -134,47 +143,62 @@ public class PostService {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
 
-        // 1. Eğer post henüz yayınlanmadıysa ve başlık değiştiyse slug'ı güncelle
-        if (!post.isPublished() && !post.getTitle().equals(request.getTitle())) {
-            String newSlug = SlugUtil.generateSlug(request.getTitle());
-            if (postRepository.existsBySlug(newSlug)) {
-                newSlug = newSlug + "-" + System.currentTimeMillis() % 1000;
+        // 💡 MEDIUM SLUG MANTIĞI:
+        // Eğer yayınlama isteği geldiyse (isPublished = true) başlığa göre gerçek slug
+        // üretilir.
+        if (request.isPublished()) {
+            // Yazı daha önce yayınlanmadıysa VEYA yayınlanmış ama başlığı değiştiyse:
+            if (!post.isPublished() || !post.getTitle().equals(request.getTitle())) {
+                String newSlug = generateUniqueSlugForPost(request.getTitle(), post.getId());
+                post.setSlug(newSlug);
             }
-            post.setSlug(newSlug);
         }
+        // NOT: isPublished false ise (Auto-save aşaması) post.setSlug() HİÇ BİR ŞEKİLDE
+        // ÇAĞRILMAZ!
+        // İlk atanan random hash (örn: 5f661044e2d6) olduğu gibi korunur.
 
-        // 2. Content Map'i String JSON'a dönüştür
+        // Content Map'i String JSON'a dönüştür
         String jsonContentString;
         try {
             jsonContentString = objectMapper.writeValueAsString(request.getContent());
         } catch (Exception e) {
-            throw new RuntimeException("İçerik JSON formatına dönüştürülemedi: " + e.getMessage());
+            throw new RuntimeException("İçerik JSON dönüştürme hatası");
         }
 
-        // 💡 3. Cover Image belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
+        // Cover Image & Subtitle belirleme
         String finalCoverImage = request.getCoverImage();
         if (finalCoverImage == null || finalCoverImage.isBlank()) {
             finalCoverImage = tiptapContentExtractor.extractFirstImage(jsonContentString);
         }
 
-        // 💡 4. Subtitle belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
         String finalSubtitle = request.getSubtitle();
         if (finalSubtitle == null || finalSubtitle.isBlank()) {
             finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
         }
 
-        // 5. Alanları güncelle
         post.setTitle(request.getTitle());
-        post.setSubtitle(finalSubtitle); // 🔥 Güncel alt başlık
+        post.setSubtitle(finalSubtitle);
         post.setContent(jsonContentString);
-        post.setCoverImage(finalCoverImage); // 🔥 Güncel kapak görseli
+        post.setCoverImage(finalCoverImage);
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());
 
-        // 6. Tek ve nihai kayıt
         Post savedPost = postRepository.save(post);
-
         return convertToResponse(savedPost);
+    }
+
+    // Yardımcı Metod: Başka postlarda var mı kontrol eder
+    private String generateUniqueSlugForPost(String title, Long currentPostId) {
+        String baseSlug = SlugUtil.generateSlug(title);
+        String slug = baseSlug;
+        int count = 1;
+
+        while (postRepository.existsBySlugAndIdNot(slug, currentPostId)) {
+            slug = baseSlug + "-" + count;
+            count++;
+        }
+
+        return slug;
     }
 
     public void deletePost(String username, Long postId) {
@@ -293,6 +317,7 @@ public class PostService {
                 .content(post.getContent())
                 .coverImage(post.getCoverImage())
                 .postType(post.getPostType())
+                .isPublished(post.isPublished())
                 .createdAt(post.getCreatedAt())
                 .authorName(post.getUser().getName())
                 .authorSurname(post.getUser().getSurname())
