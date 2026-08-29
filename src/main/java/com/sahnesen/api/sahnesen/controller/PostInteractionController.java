@@ -1,7 +1,9 @@
 package com.sahnesen.api.sahnesen.controller;
 
+import java.security.Principal;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,38 +17,51 @@ import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.services.PostInteractionService;
+import com.sahnesen.api.sahnesen.services.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/posts")
+@RequestMapping("/api/interaction/posts")
 @RequiredArgsConstructor
 public class PostInteractionController {
 
     private final PostInteractionService interactionService;
+    private final UserService userService; // Kullanıcıyı username ile bulabilmek için gerekirse ekleyebilirsin
 
     @PostMapping("/{postId}/reactions/toggle")
     public ResponseEntity<?> toggleReaction(
-            @AuthenticationPrincipal User user,
+            Principal principal,
             @PathVariable Long postId,
             @RequestParam ReactionType reactionType) {
-        boolean status = interactionService.toggleReaction(user, postId, reactionType);
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        // principal.getName() kullanarak serviste kullanıcıyı bulabilir veya ID'sini
+        // çekebilirsin
+        boolean status = interactionService.toggleReaction(principal.getName(), postId, reactionType);
         return ResponseEntity.ok(Map.of("reacted", status));
     }
 
     @PostMapping("/{postId}/bookmarks/toggle")
     public ResponseEntity<?> toggleBookmark(
-            @AuthenticationPrincipal User user,
+            Principal principal,
             @PathVariable Long postId,
             @RequestParam(required = false) Long collectionId) {
-        boolean status = interactionService.toggleBookmark(user, postId, collectionId);
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        boolean status = interactionService.toggleBookmark(principal.getName(), postId, collectionId);
         return ResponseEntity.ok(Map.of("bookmarked", status));
     }
 
     @GetMapping("/{postId}/interactions")
     public ResponseEntity<PostInteractionStatusDTO> getStatus(
-            @AuthenticationPrincipal User user,
+            Principal principal,
             @PathVariable Long postId) {
-        return ResponseEntity.ok(interactionService.getInteractionStatus(user.getId(), postId));
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(interactionService.getInteractionStatus(principal.getName(), postId));
     }
 }

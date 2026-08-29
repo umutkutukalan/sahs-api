@@ -14,6 +14,7 @@ import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
 import com.sahnesen.api.sahnesen.repository.PostReactionRepository;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
+import com.sahnesen.api.sahnesen.repository.UserRepository; // Kullanıcıyı bulmak için gerekli
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,9 +26,17 @@ public class PostInteractionService {
     private final PostBookmarkRepository bookmarkRepository;
     private final BookmarkCollectionRepository collectionRepository;
     private final PostRepository postRepository;
+    private final UserRepository userRepository; // Eklendi
+
+    // Yardımcı metot: Username üzerinden User nesnesini bulur
+    private User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + username));
+    }
 
     @Transactional
-    public boolean toggleReaction(User user, Long postId, ReactionType reactionType) {
+    public boolean toggleReaction(String username, Long postId, ReactionType reactionType) {
+        User user = getUserByUsername(username);
         var existing = reactionRepository.findByUserIdAndPostIdAndReactionType(user.getId(), postId, reactionType);
 
         if (existing.isPresent()) {
@@ -48,7 +57,9 @@ public class PostInteractionService {
     }
 
     @Transactional
-    public boolean toggleBookmark(User user, Long postId, Long collectionId) {
+    public boolean toggleBookmark(String username, Long postId, Long collectionId) {
+        User user = getUserByUsername(username);
+
         // Kullanıcı klasör ID göndermediyse varsayılan klasörünü bul/oluştur
         BookmarkCollection collection;
         if (collectionId != null) {
@@ -82,7 +93,10 @@ public class PostInteractionService {
     }
 
     @Transactional(readOnly = true)
-    public PostInteractionStatusDTO getInteractionStatus(Long userId, Long postId) {
+    public PostInteractionStatusDTO getInteractionStatus(String username, Long postId) {
+        User user = getUserByUsername(username);
+        Long userId = user.getId();
+
         boolean isLiked = reactionRepository.existsByUserIdAndPostIdAndReactionType(userId, postId, ReactionType.LIKE);
         boolean isShined = reactionRepository.existsByUserIdAndPostIdAndReactionType(userId, postId,
                 ReactionType.SHINE);
