@@ -7,27 +7,29 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "post_bookmarks", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "collection_id", "post_id" })
-})
+@Table(name = "bookmark_collections")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PostBookmark {
+public class BookmarkCollection {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "collection_id", nullable = false)
-    private BookmarkCollection collection;
+    @Column(nullable = false)
+    private String name; // Örn: "Favorilerim", "Tiyatrolar"
+
+    private String description;
+
+    @Builder.Default
+    private boolean isDefault = false; // Varsayılan "Kaydedilenler" klasörü mü?
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
