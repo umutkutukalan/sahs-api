@@ -22,98 +22,100 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PostInteractionService {
 
-    private final PostReactionRepository reactionRepository;
-    private final PostBookmarkRepository bookmarkRepository;
-    private final BookmarkCollectionRepository collectionRepository;
-    private final PostRepository postRepository;
-    private final UserRepository userRepository;
+        private final PostReactionRepository reactionRepository;
+        private final PostBookmarkRepository bookmarkRepository;
+        private final BookmarkCollectionRepository collectionRepository;
+        private final PostRepository postRepository;
+        private final UserRepository userRepository;
 
-    private User getUserByUsername(String usernameOrEmail) {
-        return userRepository.findByUsername(usernameOrEmail)
-                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
-                        .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + usernameOrEmail)));
-    }
-
-    @Transactional
-    public boolean toggleReaction(String username, Long postId, ReactionType reactionType) {
-        User user = getUserByUsername(username);
-        var existing = reactionRepository.findByUserIdAndPostIdAndReactionType(user.getId(), postId, reactionType);
-
-        if (existing.isPresent()) {
-            reactionRepository.delete(existing.get());
-            return false; // Kaldırıldı
-        } else {
-            Post post = postRepository.findById(postId)
-                    .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
-
-            PostReaction reaction = PostReaction.builder()
-                    .user(user)
-                    .post(post)
-                    .reactionType(reactionType)
-                    .build();
-            reactionRepository.save(reaction);
-            return true; // Eklendi
-        }
-    }
-
-    @Transactional
-    public boolean toggleBookmark(String username, Long postId, Long collectionId) {
-        User user = getUserByUsername(username);
-
-        // Kullanıcı klasör ID göndermediyse varsayılan klasörünü bul/oluştur
-        BookmarkCollection collection;
-        if (collectionId != null) {
-            collection = collectionRepository.findById(collectionId)
-                    .orElseThrow(() -> new RuntimeException("Klasör bulunamadı"));
-        } else {
-            collection = collectionRepository.findByUserIdAndIsDefaultTrue(user.getId())
-                    .orElseGet(() -> collectionRepository.save(
-                            BookmarkCollection.builder()
-                                    .name("Kaydedilenler")
-                                    .isDefault(true)
-                                    .user(user)
-                                    .build()));
+        private User getUserByUsername(String usernameOrEmail) {
+                return userRepository.findByUsername(usernameOrEmail)
+                                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
+                                                .orElseThrow(() -> new RuntimeException(
+                                                                "Kullanıcı bulunamadı: " + usernameOrEmail)));
         }
 
-        // Bookmark kontrolü artık username üzerinden yapılıyor
-        var existing = bookmarkRepository.findByCollection_User_UsernameAndPostId(username, postId);
-        if (existing.isPresent()) {
-            bookmarkRepository.delete(existing.get());
-            return false; // Kayıtlardan çıkarıldı
-        } else {
-            Post post = postRepository.findById(postId)
-                    .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
+        @Transactional
+        public boolean toggleReaction(String username, Long postId, ReactionType reactionType) {
+                User user = getUserByUsername(username);
+                var existing = reactionRepository.findByUserIdAndPostIdAndReactionType(user.getId(), postId,
+                                reactionType);
 
-            PostBookmark bookmark = PostBookmark.builder()
-                    .collection(collection)
-                    .post(post)
-                    .build();
-            bookmarkRepository.save(bookmark);
-            return true; // Kaydedildi
+                if (existing.isPresent()) {
+                        reactionRepository.delete(existing.get());
+                        return false; // Kaldırıldı
+                } else {
+                        Post post = postRepository.findById(postId)
+                                        .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
+
+                        PostReaction reaction = PostReaction.builder()
+                                        .user(user)
+                                        .post(post)
+                                        .reactionType(reactionType)
+                                        .build();
+                        reactionRepository.save(reaction);
+                        return true; // Eklendi
+                }
         }
-    }
 
-    @Transactional(readOnly = true)
-    public PostInteractionStatusDTO getInteractionStatus(String username, Long postId) {
-        User user = getUserByUsername(username);
+        @Transactional
+        public boolean toggleBookmark(String username, Long postId, Long collectionId) {
+                User user = getUserByUsername(username);
 
-        boolean isLiked = reactionRepository.existsByUserIdAndPostIdAndReactionType(
-                user.getId(), postId, ReactionType.LIKE);
-        boolean isShined = reactionRepository.existsByUserIdAndPostIdAndReactionType(
-                user.getId(), postId, ReactionType.SHINE);
+                // Kullanıcı klasör ID göndermediyse varsayılan klasörünü bul/oluştur
+                BookmarkCollection collection;
+                if (collectionId != null) {
+                        collection = collectionRepository.findById(collectionId)
+                                        .orElseThrow(() -> new RuntimeException("Klasör bulunamadı"));
+                } else {
+                        collection = collectionRepository.findByUser_UsernameAndIsDefaultTrue(username)
+                                        .orElseGet(() -> collectionRepository.save(
+                                                        BookmarkCollection.builder()
+                                                                        .name("Kaydedilenler")
+                                                                        .isDefault(true)
+                                                                        .user(user)
+                                                                        .build()));
+                }
 
-        // Bookmark kontrolü direkt username üzerinden
-        boolean isBookmarked = bookmarkRepository.existsByCollection_User_UsernameAndPostId(username, postId);
+                // Bookmark kontrolü artık username üzerinden yapılıyor
+                var existing = bookmarkRepository.findByCollection_User_UsernameAndPostId(username, postId);
+                if (existing.isPresent()) {
+                        bookmarkRepository.delete(existing.get());
+                        return false; // Kayıtlardan çıkarıldı
+                } else {
+                        Post post = postRepository.findById(postId)
+                                        .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
 
-        long likeCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.LIKE);
-        long shineCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.SHINE);
+                        PostBookmark bookmark = PostBookmark.builder()
+                                        .collection(collection)
+                                        .post(post)
+                                        .build();
+                        bookmarkRepository.save(bookmark);
+                        return true; // Kaydedildi
+                }
+        }
 
-        return PostInteractionStatusDTO.builder()
-                .isLiked(isLiked)
-                .isShined(isShined)
-                .isBookmarked(isBookmarked)
-                .likeCount(likeCount)
-                .shineCount(shineCount)
-                .build();
-    }
+        @Transactional(readOnly = true)
+        public PostInteractionStatusDTO getInteractionStatus(String username, Long postId) {
+                User user = getUserByUsername(username);
+
+                boolean isLiked = reactionRepository.existsByUserIdAndPostIdAndReactionType(
+                                user.getId(), postId, ReactionType.LIKE);
+                boolean isShined = reactionRepository.existsByUserIdAndPostIdAndReactionType(
+                                user.getId(), postId, ReactionType.SHINE);
+
+                // Bookmark kontrolü direkt username üzerinden
+                boolean isBookmarked = bookmarkRepository.existsByCollection_User_UsernameAndPostId(username, postId);
+
+                long likeCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.LIKE);
+                long shineCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.SHINE);
+
+                return PostInteractionStatusDTO.builder()
+                                .isLiked(isLiked)
+                                .isShined(isShined)
+                                .isBookmarked(isBookmarked)
+                                .likeCount(likeCount)
+                                .shineCount(shineCount)
+                                .build();
+        }
 }
