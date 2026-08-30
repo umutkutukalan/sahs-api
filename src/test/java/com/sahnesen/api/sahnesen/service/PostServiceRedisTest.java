@@ -85,12 +85,12 @@ public class PostServiceRedisTest {
     @Transactional
     void shouldIncrementViewCountingRedisCorrectly() {
         // İlk İzlenme
-        postService.getPostWithViewCount(dynamicSlug);
+        postService.getPostWithViewCount(dynamicSlug, "kutukalanumut");
 
         Double score = redisTemplate.opsForZSet().score(TRENDING_KEY, dynamicSlug);
         assertEquals(1.0, score, "İlk izlemede skor 1 olmalı");
 
-        postService.getPostWithViewCount(dynamicSlug);
+        postService.getPostWithViewCount(dynamicSlug, "kutukalanumut");
         score = redisTemplate.opsForZSet().score(TRENDING_KEY, dynamicSlug);
         assertEquals(2.0, score, "İkinci izlemede skor 2 olmalı");
     }
@@ -104,7 +104,7 @@ public class PostServiceRedisTest {
         for (int i = 0; i < numberOfThreads; i++) {
             service.execute(() -> {
                 try {
-                    postService.getPostWithViewCount(dynamicSlug);
+                    postService.getPostWithViewCount(dynamicSlug, "kutukalanumut");
                 } finally {
                     latch.countDown();
                 }

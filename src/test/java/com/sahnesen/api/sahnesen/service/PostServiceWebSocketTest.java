@@ -122,7 +122,7 @@ public class PostServiceWebSocketTest {
         });
 
         // Servisi tetikle
-        postService.getPostWithViewCount(dynamicSlug);
+        postService.getPostWithViewCount(dynamicSlug, "kutukalanumut");
 
         // Doğrula
         Long receivedValue = blockingQueue.poll(5, TimeUnit.SECONDS);
