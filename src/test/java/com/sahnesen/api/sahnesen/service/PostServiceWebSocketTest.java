@@ -78,7 +78,7 @@ public class PostServiceWebSocketTest {
         userRepository.save(user);
 
         Post post = Post.builder()
-                .postType(PostType.BLOG)
+                .postType(PostType.SAHNE)
                 .title("Redis Test Posts")
                 .slug("redis-test-posts") // Sabit veya dynamicSlug kullanabilirsin
                 .content("Test Content")

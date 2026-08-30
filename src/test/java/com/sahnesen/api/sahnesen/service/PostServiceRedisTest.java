@@ -61,7 +61,7 @@ public class PostServiceRedisTest {
         userRepository.save(user);
 
         Post post = Post.builder()
-                .postType(PostType.BLOG)
+                .postType(PostType.SAHNE)
                 .title("Redis Test Posts")
                 .slug(SlugUtil.generateSlug("Redis Test Posts"))
                 .content("Test Content")

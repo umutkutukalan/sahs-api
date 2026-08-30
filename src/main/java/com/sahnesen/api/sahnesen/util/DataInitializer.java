@@ -25,7 +25,7 @@ public class DataInitializer {
      *       PostRequestDTO dto = new PostRequestDTO();
      *       dto.setTitle("Redis Test Yazısı");
      *       dto.setContent("Bu yazı Redis önbellekleme testidir.");
-     *       dto.setPostType(PostType.BLOG);
+     *       dto.setPostType(PostType.SAHNE);
      *       dto.setCoverImage("https://example.com/cover.jpg");
      *       dto.setPublished(true);
      * 

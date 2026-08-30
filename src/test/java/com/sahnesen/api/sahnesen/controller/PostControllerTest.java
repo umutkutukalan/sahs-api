@@ -39,7 +39,7 @@ public class PostControllerTest {
         void shouldCreatePostSuccessfully() throws Exception {
                 // GIVEN
                 PostRequestDTO request = new PostRequestDTO();
-                request.setPostType(PostType.BLOG);
+                request.setPostType(PostType.SAHNE);
                 request.setTitle("Test Başlığı");
                 request.setContent(null);
                 request.setPublished(true);
@@ -48,7 +48,7 @@ public class PostControllerTest {
                                 .id(1L)
                                 .title("Test Başlığı")
                                 .slug("test-basligi")
-                                .postType(PostType.BLOG)
+                                .postType(PostType.SAHNE)
                                 .authorName("Umut")
                                 .authorUsername("umutkutukalan")
                                 .build();
