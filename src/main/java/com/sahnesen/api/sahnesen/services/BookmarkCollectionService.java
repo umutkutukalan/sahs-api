@@ -13,6 +13,7 @@ import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
 import com.sahnesen.api.sahnesen.entities.User;
+import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
@@ -54,10 +55,10 @@ public class BookmarkCollectionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> getBookmarkedPosts(String username, Pageable pageable) {
+    public Page<PostSummaryResponse> getBookmarkedPosts(String username, PostType postType, Pageable pageable) {
         // Doğru repository olan PostBookmarkRepository üzerinden username ile sayfalı
         // çekiyoruz
-        Page<PostBookmark> bookmarks = bookmarkRepository.findByCollection_User_Username(username, pageable);
+        Page<PostBookmark> bookmarks = bookmarkRepository.findByCollection_User_Username(username, postType, pageable);
 
         return bookmarks.map(bookmark -> convertToSummaryResponse(bookmark.getPost()));
     }

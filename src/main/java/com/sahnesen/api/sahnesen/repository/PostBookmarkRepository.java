@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
+import com.sahnesen.api.sahnesen.enums.PostType;
 
 public interface PostBookmarkRepository extends JpaRepository<PostBookmark, Long> {
 
@@ -19,5 +20,5 @@ public interface PostBookmarkRepository extends JpaRepository<PostBookmark, Long
     Page<PostBookmark> findByCollectionId(Long collectionId, Pageable pageable);
 
     // Doğrudan username üzerinden kullanıcının tüm kaydedilenlerini sayfalı getir
-    Page<PostBookmark> findByCollection_User_Username(String username, Pageable pageable);
+    Page<PostBookmark> findByCollection_User_Username(String username, PostType postType, Pageable pageable);
 }
