@@ -14,7 +14,7 @@ import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
 import com.sahnesen.api.sahnesen.repository.PostReactionRepository;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
-import com.sahnesen.api.sahnesen.repository.UserRepository; // Kullanıcıyı bulmak için gerekli
+import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -26,7 +26,7 @@ public class PostInteractionService {
     private final PostBookmarkRepository bookmarkRepository;
     private final BookmarkCollectionRepository collectionRepository;
     private final PostRepository postRepository;
-    private final UserRepository userRepository; // Eklendi
+    private final UserRepository userRepository;
 
     private User getUserByUsername(String usernameOrEmail) {
         return userRepository.findByUsername(usernameOrEmail)
@@ -75,7 +75,8 @@ public class PostInteractionService {
                                     .build()));
         }
 
-        var existing = bookmarkRepository.findByCollectionUserIdAndPostId(user.getId(), postId);
+        // Bookmark kontrolü artık username üzerinden yapılıyor
+        var existing = bookmarkRepository.findByCollection_User_UsernameAndPostId(username, postId);
         if (existing.isPresent()) {
             bookmarkRepository.delete(existing.get());
             return false; // Kayıtlardan çıkarıldı
@@ -95,22 +96,17 @@ public class PostInteractionService {
     @Transactional(readOnly = true)
     public PostInteractionStatusDTO getInteractionStatus(String username, Long postId) {
         User user = getUserByUsername(username);
-        Long userId = user.getId();
 
-        boolean isLiked = reactionRepository.existsByUserIdAndPostIdAndReactionType(userId, postId, ReactionType.LIKE);
-        boolean isShined = reactionRepository.existsByUserIdAndPostIdAndReactionType(userId, postId,
-                ReactionType.SHINE);
-        boolean isBookmarked = bookmarkRepository.existsByCollectionUserIdAndPostId(userId, postId);
+        boolean isLiked = reactionRepository.existsByUserIdAndPostIdAndReactionType(
+                user.getId(), postId, ReactionType.LIKE);
+        boolean isShined = reactionRepository.existsByUserIdAndPostIdAndReactionType(
+                user.getId(), postId, ReactionType.SHINE);
+
+        // Bookmark kontrolü direkt username üzerinden
+        boolean isBookmarked = bookmarkRepository.existsByCollection_User_UsernameAndPostId(username, postId);
 
         long likeCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.LIKE);
         long shineCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.SHINE);
-
-        // BURAYA LOG EKLEYELİM:
-        System.out.println("--- GET INTERACTION STATUS ---");
-        System.out.println("Kullanıcı ID: " + userId + " | Username: " + username);
-        System.out.println("Post ID: " + postId);
-        System.out.println("isLiked Veritabanı Sonucu: " + isLiked);
-        System.out.println("Like Sayısı: " + likeCount);
 
         return PostInteractionStatusDTO.builder()
                 .isLiked(isLiked)

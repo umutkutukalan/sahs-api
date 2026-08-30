@@ -9,11 +9,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
 
 public interface PostBookmarkRepository extends JpaRepository<PostBookmark, Long> {
-    Optional<PostBookmark> findByCollectionUserIdAndPostId(Long userId, Long postId);
 
-    boolean existsByCollectionUserIdAndPostId(Long userId, Long postId);
+    // Kullanıcının username'i ve postId'sine göre bookmark bul
+    Optional<PostBookmark> findByCollection_User_UsernameAndPostId(String username, Long postId);
+
+    // Kullanıcının username'i ve postId'sine göre bookmark var mı kontrol et
+    boolean existsByCollection_User_UsernameAndPostId(String username, Long postId);
 
     Page<PostBookmark> findByCollectionId(Long collectionId, Pageable pageable);
 
-    Page<PostBookmark> findByCollectionUserId(Long userId, Pageable pageable);
+    // Doğrudan username üzerinden kullanıcının tüm kaydedilenlerini sayfalı getir
+    Page<PostBookmark> findByCollection_User_Username(String username, Pageable pageable);
 }

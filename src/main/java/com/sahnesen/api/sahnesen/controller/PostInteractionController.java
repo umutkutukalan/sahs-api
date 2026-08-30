@@ -3,9 +3,10 @@ package com.sahnesen.api.sahnesen.controller;
 import java.security.Principal;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,10 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
-import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.services.PostInteractionService;
-import com.sahnesen.api.sahnesen.services.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -27,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 public class PostInteractionController {
 
     private final PostInteractionService interactionService;
-    private final UserService userService; // Kullanıcıyı username ile bulabilmek için gerekirse ekleyebilirsin
 
     @PostMapping("/{postId}/reactions/toggle")
     public ResponseEntity<?> toggleReaction(
@@ -37,8 +35,6 @@ public class PostInteractionController {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        // principal.getName() kullanarak serviste kullanıcıyı bulabilir veya ID'sini
-        // çekebilirsin
         boolean status = interactionService.toggleReaction(principal.getName(), postId, reactionType);
         return ResponseEntity.ok(Map.of("reacted", status));
     }

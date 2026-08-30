@@ -8,7 +8,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 
 public interface BookmarkCollectionRepository extends JpaRepository<BookmarkCollection, Long> {
-    List<BookmarkCollection> findByUserId(Long userId);
 
-    Optional<BookmarkCollection> findByUserIdAndIsDefaultTrue(Long userId);
+    // Kullanıcının username'ine göre koleksiyonlarını getir
+    List<BookmarkCollection> findByUser_Username(String username);
+
+    // Kullanıcının username'ine ve varsayılan durumuna göre koleksiyon bul
+    Optional<BookmarkCollection> findByUser_UsernameAndIsDefaultTrue(String username);
 }
