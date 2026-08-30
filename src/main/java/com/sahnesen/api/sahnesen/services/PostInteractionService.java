@@ -28,10 +28,10 @@ public class PostInteractionService {
     private final PostRepository postRepository;
     private final UserRepository userRepository; // Eklendi
 
-    // Yardımcı metot: Username üzerinden User nesnesini bulur
-    private User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + username));
+    private User getUserByUsername(String usernameOrEmail) {
+        return userRepository.findByUsername(usernameOrEmail)
+                .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
+                        .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + usernameOrEmail)));
     }
 
     @Transactional
@@ -104,6 +104,13 @@ public class PostInteractionService {
 
         long likeCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.LIKE);
         long shineCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.SHINE);
+
+        // BURAYA LOG EKLEYELİM:
+        System.out.println("--- GET INTERACTION STATUS ---");
+        System.out.println("Kullanıcı ID: " + userId + " | Username: " + username);
+        System.out.println("Post ID: " + postId);
+        System.out.println("isLiked Veritabanı Sonucu: " + isLiked);
+        System.out.println("Like Sayısı: " + likeCount);
 
         return PostInteractionStatusDTO.builder()
                 .isLiked(isLiked)
