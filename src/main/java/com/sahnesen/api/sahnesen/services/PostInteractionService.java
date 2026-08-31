@@ -38,7 +38,7 @@ public class PostInteractionService {
         @Transactional
         public boolean toggleReaction(String username, Long postId, ReactionType reactionType) {
                 User user = getUserByUsername(username);
-                var existing = reactionRepository.findByUserIdAndPostIdAndReactionType(user.getId(), postId,
+                var existing = reactionRepository.findByUser_UsernameAndPostIdAndReactionType(username, postId,
                                 reactionType);
 
                 if (existing.isPresent()) {
@@ -62,7 +62,6 @@ public class PostInteractionService {
         public boolean toggleBookmark(String username, Long postId, Long collectionId) {
                 User user = getUserByUsername(username);
 
-                // Kullanıcı klasör ID göndermediyse varsayılan klasörünü bul/oluştur
                 BookmarkCollection collection;
                 if (collectionId != null) {
                         collection = collectionRepository.findById(collectionId)
@@ -77,11 +76,10 @@ public class PostInteractionService {
                                                                         .build()));
                 }
 
-                // Bookmark kontrolü artık username üzerinden yapılıyor
                 var existing = bookmarkRepository.findByCollection_User_UsernameAndPostId(username, postId);
                 if (existing.isPresent()) {
                         bookmarkRepository.delete(existing.get());
-                        return false; // Kayıtlardan çıkarıldı
+                        return false;
                 } else {
                         Post post = postRepository.findById(postId)
                                         .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
@@ -91,24 +89,27 @@ public class PostInteractionService {
                                         .post(post)
                                         .build();
                         bookmarkRepository.save(bookmark);
-                        return true; // Kaydedildi
+                        return true;
                 }
         }
 
         @Transactional(readOnly = true)
-        public PostInteractionStatusDTO getInteractionStatus(String username, Long postId) {
-                User user = getUserByUsername(username);
+        public PostInteractionStatusDTO getInteractionStatus(String username, Long postId,
+                        ReactionType targetShineType) {
+                // Kullanıcının varlığını doğrula
+                getUserByUsername(username);
 
-                boolean isLiked = reactionRepository.existsByUserIdAndPostIdAndReactionType(
-                                user.getId(), postId, ReactionType.LIKE);
-                boolean isShined = reactionRepository.existsByUserIdAndPostIdAndReactionType(
-                                user.getId(), postId, ReactionType.SHINE);
+                boolean isLiked = reactionRepository.existsByUser_UsernameAndPostIdAndReactionType(
+                                username, postId, ReactionType.LIKE);
 
-                // Bookmark kontrolü direkt username üzerinden
+                // O spesifik mod parlatma türüne ait kontrol (örn: SHINE_YANYANA)
+                boolean isShined = reactionRepository.existsByUser_UsernameAndPostIdAndReactionType(
+                                username, postId, targetShineType);
+
                 boolean isBookmarked = bookmarkRepository.existsByCollection_User_UsernameAndPostId(username, postId);
 
                 long likeCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.LIKE);
-                long shineCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.SHINE);
+                long shineCount = reactionRepository.countByPostIdAndReactionType(postId, targetShineType);
 
                 return PostInteractionStatusDTO.builder()
                                 .isLiked(isLiked)

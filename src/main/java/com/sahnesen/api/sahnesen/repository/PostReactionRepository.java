@@ -8,9 +8,12 @@ import com.sahnesen.api.sahnesen.entities.PostReaction;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 
 public interface PostReactionRepository extends JpaRepository<PostReaction, Long> {
-    Optional<PostReaction> findByUserIdAndPostIdAndReactionType(Long userId, Long postId, ReactionType reactionType);
+    // Username üzerinden reaksiyon bulma
+    Optional<PostReaction> findByUser_UsernameAndPostIdAndReactionType(String username, Long postId,
+            ReactionType reactionType);
 
-    boolean existsByUserIdAndPostIdAndReactionType(Long userId, Long postId, ReactionType reactionType);
+    // Username üzerinden reaksiyon varlık kontrolü
+    boolean existsByUser_UsernameAndPostIdAndReactionType(String username, Long postId, ReactionType reactionType);
 
     long countByPostIdAndReactionType(Long postId, ReactionType reactionType);
 }

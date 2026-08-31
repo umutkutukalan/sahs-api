@@ -3,8 +3,6 @@ package com.sahnesen.api.sahnesen.controller;
 import java.security.Principal;
 import java.util.Map;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,10 +52,11 @@ public class PostInteractionController {
     @GetMapping("/{postId}/interactions")
     public ResponseEntity<PostInteractionStatusDTO> getStatus(
             Principal principal,
-            @PathVariable Long postId) {
+            @PathVariable Long postId,
+            @RequestParam ReactionType targetShineType) { // Hangi moda ait parlatma durumu soruluyorsa
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(interactionService.getInteractionStatus(principal.getName(), postId));
+        return ResponseEntity.ok(interactionService.getInteractionStatus(principal.getName(), postId, targetShineType));
     }
 }
