@@ -41,8 +41,10 @@ public class FollowController {
 
         FollowDTO followDTO = new FollowDTO();
         followDTO.setId(follow.getId());
-        followDTO.setFollowerUsername(follow.getFollower().getUsername());
-        followDTO.setFollowingUsername(follow.getFollowing().getUsername());
+        followDTO.setUsername(follow.getFollower().getUsername());
+        followDTO.setName(follow.getFollower().getName());
+        followDTO.setSurname(follow.getFollower().getSurname());
+        followDTO.setProfileImg(follow.getFollower().getProfileImg());
         followDTO.setFollowedAt(follow.getCreatedAt());
         return ResponseEntity.ok(followDTO);
     }

@@ -7,7 +7,9 @@ import lombok.Data;
 @Data
 public class FollowDTO {
     private Long id;
-    private String followerUsername;
-    private String followingUsername;
+    private String username;
+    private String name;
+    private String surname;
+    private String profileImg;
     private LocalDateTime followedAt;
 }

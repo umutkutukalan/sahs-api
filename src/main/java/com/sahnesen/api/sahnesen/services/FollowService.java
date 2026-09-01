@@ -125,8 +125,11 @@ public class FollowService {
         return follows.stream().map(follow -> {
             FollowDTO dto = new FollowDTO();
             dto.setId(follow.getId());
-            dto.setFollowerUsername(follow.getFollower().getUsername());
-            dto.setFollowingUsername(follow.getFollowing().getUsername());
+            // Takipçi listesinde bilgileri gelen kişi "follower"dır:
+            dto.setUsername(follow.getFollower().getUsername());
+            dto.setName(follow.getFollower().getName());
+            dto.setSurname(follow.getFollower().getSurname());
+            dto.setProfileImg(follow.getFollower().getProfileImg());
             dto.setFollowedAt(follow.getCreatedAt());
             return dto;
         }).collect(java.util.stream.Collectors.toList());
@@ -141,8 +144,11 @@ public class FollowService {
         return follows.stream().map(follow -> {
             FollowDTO dto = new FollowDTO();
             dto.setId(follow.getId());
-            dto.setFollowerUsername(follow.getFollower().getUsername());
-            dto.setFollowingUsername(follow.getFollowing().getUsername());
+            // Takip edilen listesinde bilgileri gelen kişi "following"dir:
+            dto.setUsername(follow.getFollowing().getUsername());
+            dto.setName(follow.getFollowing().getName());
+            dto.setSurname(follow.getFollowing().getSurname());
+            dto.setProfileImg(follow.getFollowing().getProfileImg());
             dto.setFollowedAt(follow.getCreatedAt());
             return dto;
         }).collect(java.util.stream.Collectors.toList());
