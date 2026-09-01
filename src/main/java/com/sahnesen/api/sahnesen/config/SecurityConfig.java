@@ -53,7 +53,14 @@ public class SecurityConfig {
                                                 .permitAll()
 
                                                 // 🤝 FOLLOW SYSTEM
-                                                .requestMatchers(HttpMethod.GET, "/api/follows/counts/**").permitAll()
+                                                // Önce spesifik ve oturum gerektiren endpoint'i yaz:
+                                                .requestMatchers(HttpMethod.GET, "/api/follows/is-following/**")
+                                                .authenticated()
+
+                                                // Diğer genel GET listeleme (followers/following) istekleri herkese
+                                                // açık kalsın:
+                                                .requestMatchers(HttpMethod.GET, "/api/follows/**").permitAll()
+
                                                 .requestMatchers("/api/follows/**").authenticated()
 
                                                 // 🔓 PREFLIGHT (CORS)

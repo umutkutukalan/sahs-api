@@ -1,6 +1,7 @@
 package com.sahnesen.api.sahnesen.controller;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.HttpStatus;
@@ -26,9 +27,7 @@ public class FollowController {
 
     private final FollowService followService;
 
-    /**
-     * 🚀 Bir kullanıcıyı takip et (Username ile)
-     */
+    // Bir kullanıcıyı takip et (Username ile)
     @PostMapping("/{followingUsername}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<FollowDTO> followUser(@PathVariable String followingUsername,
@@ -48,9 +47,7 @@ public class FollowController {
         return ResponseEntity.ok(followDTO);
     }
 
-    /**
-     * Takibi bırak (Username ile)
-     */
+    // Takibi bırak (Username ile)
     @DeleteMapping("/{followingUsername}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> unfollowUser(@PathVariable String followingUsername,
@@ -64,17 +61,13 @@ public class FollowController {
         return ResponseEntity.ok().build();
     }
 
-    /**
-     * 📊 Takipçi ve takip edilen sayılarını getir
-     */
+    // Takipçi ve takip edilen sayılarını getir
     @GetMapping("/stats/{username}")
     public ResponseEntity<Map<String, Long>> getFollowStats(@PathVariable String username) {
         return ResponseEntity.ok(followService.getFollowStats(username));
     }
 
-    /**
-     * 🔍 Giriş yapmış kullanıcı bu kişiyi takip ediyor mu? (Username ile)
-     */
+    // Giriş yapmış kullanıcı bu kişiyi takip ediyor mu? (Username ile)
     @GetMapping("/is-following/{followingUsername}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Boolean> isFollowing(@PathVariable String followingUsername,
@@ -86,4 +79,17 @@ public class FollowController {
         String currentUserUsername = principal.getName();
         return ResponseEntity.ok(followService.isFollowing(currentUserUsername, followingUsername));
     }
+
+    // Kullanıcının takipçilerini listele (Username ile)
+    @GetMapping("/followers/{username}")
+    public ResponseEntity<List<FollowDTO>> getFollowers(@PathVariable String username) {
+        return ResponseEntity.ok(followService.getFollowersByUsername(username));
+    }
+
+    // Kullanıcının takip ettiklerini listele (Username ile)
+    @GetMapping("/following/{username}")
+    public ResponseEntity<List<FollowDTO>> getFollowing(@PathVariable String username) {
+        return ResponseEntity.ok(followService.getFollowingByUsername(username));
+    }
+
 }

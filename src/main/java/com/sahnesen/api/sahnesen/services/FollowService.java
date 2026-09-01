@@ -1,11 +1,13 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sahnesen.api.sahnesen.dto.FollowDTO;
 import com.sahnesen.api.sahnesen.entities.Follow;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.BadgeCategory;
@@ -113,4 +115,37 @@ public class FollowService {
 
         return followRepository.existsByFollowerIdAndFollowingId(follower.getId(), following.getId());
     }
+
+    public List<FollowDTO> getFollowersByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
+
+        List<Follow> follows = followRepository.findByFollowingId(user.getId());
+
+        return follows.stream().map(follow -> {
+            FollowDTO dto = new FollowDTO();
+            dto.setId(follow.getId());
+            dto.setFollowerUsername(follow.getFollower().getUsername());
+            dto.setFollowingUsername(follow.getFollowing().getUsername());
+            dto.setFollowedAt(follow.getCreatedAt());
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
+    public List<FollowDTO> getFollowingByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
+
+        List<Follow> follows = followRepository.findByFollowerId(user.getId());
+
+        return follows.stream().map(follow -> {
+            FollowDTO dto = new FollowDTO();
+            dto.setId(follow.getId());
+            dto.setFollowerUsername(follow.getFollower().getUsername());
+            dto.setFollowingUsername(follow.getFollowing().getUsername());
+            dto.setFollowedAt(follow.getCreatedAt());
+            return dto;
+        }).collect(java.util.stream.Collectors.toList());
+    }
+
 }
