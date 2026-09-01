@@ -28,18 +28,19 @@ public class FollowService {
     private static final String FOLLOWERS_COUNT_KEY = "user:followers:count:";
     private static final String FOLLOWING_COUNT_KEY = "user:following:count:";
 
-    public Follow followUser(String followerUsername, Long followingId) {
+    @Transactional
+    public Follow followUser(String followerUsername, String followingUsername) {
         User follower = userRepository.findByUsername(followerUsername)
                 .orElseThrow(() -> new RuntimeException("Takip eden kullanıcı bulunamadı."));
 
-        User following = userRepository.findById(followingId)
+        User following = userRepository.findByUsername(followingUsername)
                 .orElseThrow(() -> new RuntimeException("Takip edilen kullanıcı bulunamadı."));
 
-        if (follower.getId().equals(followingId)) {
+        if (follower.getId().equals(following.getId())) {
             throw new RuntimeException("Kendinizi takip edemezsiniz.");
         }
 
-        if (followRepository.findByFollowerIdAndFollowingId(follower.getId(), followingId).isPresent()) {
+        if (followRepository.findByFollowerIdAndFollowingId(follower.getId(), following.getId()).isPresent()) {
             throw new RuntimeException("Zaten bu kullanıcıyı takip ediyorsunuz.");
         }
 
@@ -49,34 +50,33 @@ public class FollowService {
         Follow savedFollow = followRepository.save(follow);
 
         // REDIS COUNTER UPDATE (Atomic)
-        // Takip edilenin takipçi sayısını artır
-        Long newFollowerCount = redisTemplate.opsForValue().increment(FOLLOWERS_COUNT_KEY + followingId);
-
-        // Takip edenin takip ettiklerini artır
+        Long newFollowerCount = redisTemplate.opsForValue().increment(FOLLOWERS_COUNT_KEY + following.getId());
         redisTemplate.opsForValue().increment(FOLLOWING_COUNT_KEY + follower.getId());
 
-        log.info(followerUsername + " artık " + following.getUsername() + " kullanıcısını takip ediyor.");
+        log.info(followerUsername + " artık " + followingUsername + " kullanıcısını takip ediyor.");
 
-        // Rozet kontrolü ve ataması (Dinamik ve Tekil Artış)
-        // Artık kategori bilgisini de gönderiyoruz
         if (newFollowerCount != null) {
-            badgeService.checkAndAssignBadges(followingId, BadgeCategory.FOLLOWER, newFollowerCount.intValue());
+            badgeService.checkAndAssignBadges(following.getId(), BadgeCategory.FOLLOWER, newFollowerCount.intValue());
         }
 
         return savedFollow;
     }
 
     @Transactional
-    public void unfollowUser(String followerUsername, Long followingId) {
+    public void unfollowUser(String followerUsername, String followingUsername) {
         User follower = userRepository.findByUsername(followerUsername)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
-        Follow follow = followRepository.findByFollowerIdAndFollowingId(follower.getId(), followingId)
-                .orElseThrow(() -> new RuntimeException("Takip ilişkisi bulunumadı."));
+
+        User following = userRepository.findByUsername(followingUsername)
+                .orElseThrow(() -> new RuntimeException("Takip edilecek kullanıcı bulunamadı."));
+
+        Follow follow = followRepository.findByFollowerIdAndFollowingId(follower.getId(), following.getId())
+                .orElseThrow(() -> new RuntimeException("Takip ilişkisi bulunamadı."));
 
         followRepository.delete(follow);
 
-        // Redis'teki takipçi ve takip edilen sayısını güncelle
-        redisTemplate.opsForValue().decrement(FOLLOWERS_COUNT_KEY + followingId);
+        // Redis'teki sayaçları güncelle
+        redisTemplate.opsForValue().decrement(FOLLOWERS_COUNT_KEY + following.getId());
         redisTemplate.opsForValue().decrement(FOLLOWING_COUNT_KEY + follower.getId());
     }
 
@@ -84,11 +84,9 @@ public class FollowService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
 
-        // Önce Redis'ten almayı dene
         Integer followers = (Integer) redisTemplate.opsForValue().get(FOLLOWERS_COUNT_KEY + user.getId());
         Integer following = (Integer) redisTemplate.opsForValue().get(FOLLOWING_COUNT_KEY + user.getId());
 
-        // Eğer Redis boşsa (Cache Miss), DB'den say ve Redis'i doldur
         if (followers == null) {
             long count = followRepository.countByFollowingId(user.getId());
             redisTemplate.opsForValue().set(FOLLOWERS_COUNT_KEY + user.getId(), (int) count);
@@ -104,13 +102,15 @@ public class FollowService {
         return Map.of(
                 "followerCount", followers.longValue(),
                 "followingCount", following.longValue());
-
     }
 
-    public boolean isFollowing(String followerUsername, Long followingId) {
-        return userRepository.findByUsername(followerUsername)
-                .map(user -> followRepository.findByFollowerIdAndFollowingId(user.getId(), followingId).isPresent())
-                .orElse(false);
-    }
+    public boolean isFollowing(String followerUsername, String followingUsername) {
+        User follower = userRepository.findByUsername(followerUsername).orElse(null);
+        User following = userRepository.findByUsername(followingUsername).orElse(null);
 
+        if (follower == null || following == null)
+            return false;
+
+        return followRepository.existsByFollowerIdAndFollowingId(follower.getId(), following.getId());
+    }
 }

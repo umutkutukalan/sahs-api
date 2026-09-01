@@ -27,19 +27,19 @@ public class FollowController {
     private final FollowService followService;
 
     /**
-     * 🚀 Bir kullanıcıyı takip et
-     * followerUsername bilgisini JWT token'dan (SecurityContext) çekiyoruz.
+     * 🚀 Bir kullanıcıyı takip et (Username ile)
      */
-    @PostMapping("/{followingId}")
+    @PostMapping("/{followingUsername}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<FollowDTO> followUser(@PathVariable Long followingId,
+    public ResponseEntity<FollowDTO> followUser(@PathVariable String followingUsername,
             Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String followerUsername = principal.getName();
-        Follow follow = followService.followUser(followerUsername, followingId);
+        Follow follow = followService.followUser(followerUsername, followingUsername);
+
         FollowDTO followDTO = new FollowDTO();
         followDTO.setId(follow.getId());
         followDTO.setFollowerUsername(follow.getFollower().getUsername());
@@ -49,24 +49,23 @@ public class FollowController {
     }
 
     /**
-     * Takibi bırak
+     * Takibi bırak (Username ile)
      */
-    @DeleteMapping("/{followingId}")
+    @DeleteMapping("/{followingUsername}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> unfollowUser(@PathVariable Long followingId,
+    public ResponseEntity<Void> unfollowUser(@PathVariable String followingUsername,
             Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String followerUsername = principal.getName();
-        followService.unfollowUser(followerUsername, followingId);
+        followService.unfollowUser(followerUsername, followingUsername);
         return ResponseEntity.ok().build();
     }
 
     /**
      * 📊 Takipçi ve takip edilen sayılarını getir
-     * Bu endpoint public olabilir, profil sayfasında herkes görebilir.
      */
     @GetMapping("/stats/{username}")
     public ResponseEntity<Map<String, Long>> getFollowStats(@PathVariable String username) {
@@ -74,20 +73,17 @@ public class FollowController {
     }
 
     /**
-     * 🔍 Giriş yapmış kullanıcı bu kişiyi takip ediyor mu?
-     * Frontend'de butonun "Takip Et" mi yoksa "Takibi Bırak" mı olacağını
-     * belirlemek için.
+     * 🔍 Giriş yapmış kullanıcı bu kişiyi takip ediyor mu? (Username ile)
      */
-    @GetMapping("/is-following/{followingId}")
+    @GetMapping("/is-following/{followingUsername}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Boolean> isFollowing(@PathVariable Long followingId,
+    public ResponseEntity<Boolean> isFollowing(@PathVariable String followingUsername,
             Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String currentUserUsername = principal.getName();
-        return ResponseEntity.ok(followService.isFollowing(currentUserUsername, followingId));
+        return ResponseEntity.ok(followService.isFollowing(currentUserUsername, followingUsername));
     }
-
 }

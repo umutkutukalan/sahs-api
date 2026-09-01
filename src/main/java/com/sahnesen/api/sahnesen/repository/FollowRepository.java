@@ -4,11 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import com.sahnesen.api.sahnesen.entities.Follow;
 
-@Repository
 public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     // Belirli bir kullanıcının takip ettiklerini listele (Following list)
