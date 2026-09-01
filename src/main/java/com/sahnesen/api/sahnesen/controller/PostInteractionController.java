@@ -3,6 +3,9 @@ package com.sahnesen.api.sahnesen.controller;
 import java.security.Principal;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,9 +16,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
+import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.services.PostInteractionService;
 
+import io.lettuce.core.GeoArgs.Sort;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -58,5 +63,15 @@ public class PostInteractionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(interactionService.getInteractionStatus(principal.getName(), postId, targetShineType));
+    }
+
+    @GetMapping("/liked")
+    public ResponseEntity<Page<PostSummaryResponse>> getLikedPosts(
+            Principal principal,
+            @PageableDefault(size = 5, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(interactionService.getLikedPosts(principal.getName(), pageable));
     }
 }

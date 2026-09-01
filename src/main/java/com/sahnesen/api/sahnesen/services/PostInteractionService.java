@@ -1,9 +1,13 @@
 package com.sahnesen.api.sahnesen.services;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
+import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
+import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
@@ -118,5 +122,35 @@ public class PostInteractionService {
                                 .likeCount(likeCount)
                                 .shineCount(shineCount)
                                 .build();
+        }
+
+        @Transactional(readOnly = true)
+        public Page<PostSummaryResponse> getLikedPosts(String username, Pageable pageable) {
+                // Kullanıcının varlığını doğrula
+                getUserByUsername(username);
+
+                // Kullanıcının LIKE türündeki reaksiyonlarını sayfalı olarak çek
+                Page<PostReaction> reactions = reactionRepository.findByUser_UsernameAndReactionType(
+                                username, ReactionType.LIKE, pageable);
+
+                // Post nesnelerini PostSummaryResponse record'una map et
+                return reactions.map(reaction -> {
+                        Post post = reaction.getPost();
+                        var author = post.getUser();
+
+                        return new PostSummaryResponse(
+                                        post.getId(),
+                                        post.getTitle(),
+                                        post.getSubtitle(),
+                                        post.getSlug(),
+                                        post.getCoverImage(),
+                                        post.getPostType(),
+                                        post.getCreatedAt(),
+                                        post.getViewCount(),
+                                        author != null ? author.getName() : null,
+                                        author != null ? author.getSurname() : null,
+                                        author != null ? author.getUsername() : null,
+                                        author != null ? author.getProfileImg() : null);
+                });
         }
 }
