@@ -3,6 +3,8 @@ package com.sahnesen.api.sahnesen.services;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -116,16 +118,15 @@ public class FollowService {
         return followRepository.existsByFollowerIdAndFollowingId(follower.getId(), following.getId());
     }
 
-    public List<FollowDTO> getFollowersByUsername(String username) {
+    public List<FollowDTO> getFollowersByUsername(String username, Pageable pageable) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
 
-        List<Follow> follows = followRepository.findByFollowingId(user.getId());
+        Page<Follow> followPage = followRepository.findByFollowingId(user.getId(), pageable);
 
-        return follows.stream().map(follow -> {
+        return followPage.getContent().stream().map(follow -> {
             FollowDTO dto = new FollowDTO();
             dto.setId(follow.getId());
-            // Takipçi listesinde bilgileri gelen kişi "follower"dır:
             dto.setUsername(follow.getFollower().getUsername());
             dto.setName(follow.getFollower().getName());
             dto.setSurname(follow.getFollower().getSurname());
@@ -135,16 +136,15 @@ public class FollowService {
         }).collect(java.util.stream.Collectors.toList());
     }
 
-    public List<FollowDTO> getFollowingByUsername(String username) {
+    public List<FollowDTO> getFollowingByUsername(String username, Pageable pageable) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
 
-        List<Follow> follows = followRepository.findByFollowerId(user.getId());
+        Page<Follow> followPage = followRepository.findByFollowerId(user.getId(), pageable);
 
-        return follows.stream().map(follow -> {
+        return followPage.getContent().stream().map(follow -> {
             FollowDTO dto = new FollowDTO();
             dto.setId(follow.getId());
-            // Takip edilen listesinde bilgileri gelen kişi "following"dir:
             dto.setUsername(follow.getFollowing().getUsername());
             dto.setName(follow.getFollowing().getName());
             dto.setSurname(follow.getFollowing().getSurname());
