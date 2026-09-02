@@ -58,4 +58,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                         @Param("postType") PostType postType,
                         Pageable pageable);
 
+        // 4. Takip Edilenlerin İçerikleri (Yenilikler Akışı)
+        @Query("SELECT p FROM Post p WHERE p.user.id IN " +
+                        "(SELECT f.following.id FROM Follow f WHERE f.follower.username = :username) " +
+                        "AND p.isPublished = true AND (:postType IS NULL OR p.postType = :postType)")
+        Page<Post> findFollowingPostsWithFilter(@Param("username") String username,
+                        @Param("postType") PostType postType, Pageable pageable);
+
 }

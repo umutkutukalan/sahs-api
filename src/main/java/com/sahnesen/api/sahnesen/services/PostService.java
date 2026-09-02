@@ -347,4 +347,11 @@ public class PostService {
 
     }
 
+    // Takip Edilenlerin Akışı
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponse> getFollowingPosts(String username, PostType type, Pageable pageable) {
+        return postRepository.findFollowingPostsWithFilter(username, type, pageable)
+                .map(this::convertToSummaryResponse);
+    }
+
 }

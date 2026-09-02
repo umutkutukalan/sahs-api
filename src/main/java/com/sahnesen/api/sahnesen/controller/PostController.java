@@ -124,4 +124,18 @@ public class PostController {
         return ResponseEntity.ok(postService.getTopPosts(limit));
     }
 
+    // Takip Edilenlerin Akışı (Giriş yapan kullanıcıya özel)
+    @GetMapping("/following")
+    public ResponseEntity<Page<PostSummaryResponse>> getFollowingPosts(
+            Principal principal,
+            @RequestParam(required = false) PostType postType,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        return ResponseEntity.ok(postService.getFollowingPosts(principal.getName(), postType, pageable));
+    }
+
 }
