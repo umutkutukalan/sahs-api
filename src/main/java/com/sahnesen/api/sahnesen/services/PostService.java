@@ -2,6 +2,7 @@ package com.sahnesen.api.sahnesen.services;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -21,9 +22,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.entities.Post;
+import com.sahnesen.api.sahnesen.entities.Tag;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
+import com.sahnesen.api.sahnesen.repository.TagRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.util.SlugUtil;
@@ -40,6 +43,7 @@ public class PostService {
     private HttpServletRequest request; // WebSocket bağlantısında kullanmak üzere ekliyoruz
 
     private final PostRepository postRepository;
+    private final TagRepository tagRepository;
     private final TiptapContentExtractor tiptapContentExtractor;
     private final UserRepository userRepository;
     private final NotificationService notificationService; // Post oluşturulduğunda bildirim göndermek için ekliyoruz
@@ -97,6 +101,7 @@ public class PostService {
                 .content(jsonContentString)
                 .coverImage(finalCoverImage)
                 .user(user)
+                .tags(processAndGetTags(request.getTags()))
                 .isPublished(request.isPublished())
                 .build();
 
@@ -113,6 +118,25 @@ public class PostService {
         }
 
         return convertToResponse(savedPost);
+    }
+
+    private Set<Tag> processAndGetTags(List<String> rawTagNames) {
+        Set<Tag> tags = new HashSet<>();
+        if (rawTagNames == null || rawTagNames.isEmpty())
+            return tags;
+
+        for (String rawName : rawTagNames) {
+            String cleanName = rawName.trim().toLowerCase();
+            if (cleanName.isEmpty())
+                continue;
+
+            // Veritabanında varsa al, yoksa yeni oluştur
+            Tag tag = tagRepository.findByNameIgnoreCase(cleanName)
+                    .orElseGet(() -> tagRepository.save(Tag.builder().name(cleanName).build()));
+
+            tags.add(tag);
+        }
+        return tags;
     }
 
     public void validatePostOwnership(Long postId, String username) {
@@ -182,6 +206,7 @@ public class PostService {
         post.setCoverImage(finalCoverImage);
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());
+        post.setTags(processAndGetTags(request.getTags()));
 
         Post savedPost = postRepository.save(post);
         return convertToResponse(savedPost);
@@ -291,6 +316,11 @@ public class PostService {
 
     // 💡 HAFİF DTO DÖNÜŞTÜRÜCÜ (Content Yok!)
     private PostSummaryResponse convertToSummaryResponse(Post post) {
+
+        List<String> tagNames = post.getTags() != null
+                ? post.getTags().stream().map(Tag::getName).toList()
+                : Collections.emptyList();
+
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
@@ -298,6 +328,7 @@ public class PostService {
                 post.getSlug(),
                 post.getCoverImage(),
                 post.getPostType(),
+                tagNames,
                 post.getCreatedAt(),
                 post.getViewCount(),
                 post.getUser().getName(),
@@ -309,6 +340,12 @@ public class PostService {
     }
 
     private PostResponse convertToResponse(Post post) {
+
+        // Tag entity setini List<String>'e dönüştürüyoruz
+        List<String> tagNames = post.getTags() != null
+                ? post.getTags().stream().map(Tag::getName).toList()
+                : Collections.emptyList();
+
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -317,6 +354,7 @@ public class PostService {
                 .content(post.getContent())
                 .coverImage(post.getCoverImage())
                 .postType(post.getPostType())
+                .tags(tagNames)
                 .isPublished(post.isPublished())
                 .createdAt(post.getCreatedAt())
                 .authorName(post.getUser().getName())
@@ -352,6 +390,25 @@ public class PostService {
     public Page<PostSummaryResponse> getFollowingPosts(String username, PostType type, Pageable pageable) {
         return postRepository.findFollowingPostsWithFilter(username, type, pageable)
                 .map(this::convertToSummaryResponse);
+    }
+
+    // 4 Katmanlı Ağırlıklı Arama Servis Metodu
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponse> searchPosts(String keyword, Pageable pageable) {
+        if (keyword == null || keyword.isBlank()) {
+            return Page.empty(pageable);
+        }
+        return postRepository.searchPostsWeighted(keyword.trim(), pageable)
+                .map(this::convertToSummaryResponse);
+    }
+
+    // Auto-complete için etiket arama metodu
+    @Transactional(readOnly = true)
+    public List<Tag> searchTagsForAutocomplete(String query) {
+        if (query == null || query.isBlank()) {
+            return Collections.emptyList();
+        }
+        return tagRepository.searchTags(query.trim());
     }
 
 }

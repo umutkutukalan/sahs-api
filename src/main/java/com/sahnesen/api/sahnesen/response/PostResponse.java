@@ -3,6 +3,7 @@ package com.sahnesen.api.sahnesen.response;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sahnesen.api.sahnesen.enums.PostType;
@@ -27,6 +28,8 @@ public class PostResponse implements Serializable {
     private String content;
     private String coverImage;
     private PostType postType;
+
+    private List<String> tags;
 
     // Spring SpEL ve Jackson için isPublished kontrolü
     @JsonProperty("isPublished")

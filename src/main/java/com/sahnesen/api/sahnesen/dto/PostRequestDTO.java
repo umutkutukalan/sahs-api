@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.dto;
 
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,6 +28,10 @@ public class PostRequestDTO {
     private Map<String, Object> content; // Tiptap JSON String
 
     private String coverImage; // Opsiyonel Kapak Fotoğrafı URL'i
+
+    // Yazara ait etiketler (Örn: ["sinirbilim", "felsefe"])
+    @Size(max = 5, message = "En fazla 5 etiket ekleyebilirsiniz.")
+    private List<String> tags;
 
     @JsonProperty("isPublished") // Jackson'ın 'is' ekini yutmasını engeller
     private boolean isPublished = false; // Direkt yayınlamak mı isteriz yoksa taslak mı kalsın?
