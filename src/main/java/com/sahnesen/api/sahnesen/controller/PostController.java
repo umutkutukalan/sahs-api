@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PostRequestDTO;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
+import com.sahnesen.api.sahnesen.entities.Tag;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.response.PostResponse;
 import com.sahnesen.api.sahnesen.services.FileService;
@@ -136,6 +137,23 @@ public class PostController {
         }
 
         return ResponseEntity.ok(postService.getFollowingPosts(principal.getName(), postType, pageable));
+    }
+
+    // 4 Katmanlı Ağırlıklı Arama Endpoint'i
+    @GetMapping("/search")
+    public ResponseEntity<Page<PostSummaryResponse>> searchPosts(
+            @RequestParam("keyword") String keyword,
+            Pageable pageable) {
+        Page<PostSummaryResponse> results = postService.searchPosts(keyword, pageable);
+        return ResponseEntity.ok(results);
+    }
+
+    // Auto-complete için Etiket Arama Endpoint'i
+    @GetMapping("/tags/autocomplete")
+    public ResponseEntity<List<Tag>> autocompleteTags(
+            @RequestParam("query") String query) {
+        List<Tag> tags = postService.searchTagsForAutocomplete(query);
+        return ResponseEntity.ok(tags);
     }
 
 }
