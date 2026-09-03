@@ -6,6 +6,8 @@ import java.util.Set;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -36,6 +38,7 @@ public class Tag {
     private String name; // Örn: "sinirbilim", "felsefe"
 
     @Builder.Default
+    @JsonIgnore
     @ManyToMany(mappedBy = "tags")
     private Set<Post> posts = new HashSet<>();
 
