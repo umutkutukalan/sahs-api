@@ -65,4 +65,36 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         Page<Post> findFollowingPostsWithFilter(@Param("username") String username,
                         @Param("postType") PostType postType, Pageable pageable);
 
+        // 4 Katmanlı Ağırlıklı Arama (Weighted Search)
+        // 1. Etiket eşleşmesi: En yüksek puan (+10)
+        // 2. Başlık eşleşmesi: Yüksek puan (+5)
+        // 3. Alt metin / Özet eşleşmesi: Orta puan (+2)
+        // 4. Gövde eşleşmesi: Düşük puan (+1)
+        @Query(value = "SELECT DISTINCT p.*, " +
+                        "(CASE WHEN EXISTS (SELECT 1 FROM post_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.post_id = p.id AND LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) THEN 10 ELSE 0 END + "
+                        +
+                        " CASE WHEN LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 5 ELSE 0 END + " +
+                        " CASE WHEN LOWER(p.subtitle) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 2 ELSE 0 END + " +
+                        " CASE WHEN LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) THEN 1 ELSE 0 END) AS relevance_score "
+                        +
+                        "FROM posts p " +
+                        "WHERE p.is_published = true AND (" +
+                        "   EXISTS (SELECT 1 FROM post_tags pt JOIN tags t ON pt.tag_id = t.id WHERE pt.post_id = p.id AND LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%'))) OR "
+                        +
+                        "   LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                        "   LOWER(p.subtitle) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                        "   LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+                        ") " +
+                        "ORDER BY relevance_score DESC, p.created_at DESC", countQuery = "SELECT COUNT(DISTINCT p.id) FROM posts p "
+                                        +
+                                        "LEFT JOIN post_tags pt ON p.id = pt.post_id " +
+                                        "LEFT JOIN tags t ON pt.tag_id = t.id " +
+                                        "WHERE p.is_published = true AND (" +
+                                        "   LOWER(t.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                                        "   LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                                        "   LOWER(p.subtitle) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+                                        "   LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))" +
+                                        ")", nativeQuery = true)
+        Page<Post> searchPostsWeighted(@Param("keyword") String keyword, Pageable pageable);
+
 }
