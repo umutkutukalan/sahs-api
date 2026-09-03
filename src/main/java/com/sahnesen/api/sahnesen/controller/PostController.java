@@ -156,4 +156,11 @@ public class PostController {
         return ResponseEntity.ok(tags);
     }
 
+    @GetMapping("/tag/{tagName}")
+    public ResponseEntity<Page<PostSummaryResponse>> getPostsByTag(
+            @PathVariable String tagName,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(postService.getPostsByTag(tagName, pageable));
+    }
+
 }

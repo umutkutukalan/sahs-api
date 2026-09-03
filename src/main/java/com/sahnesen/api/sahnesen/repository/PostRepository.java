@@ -97,4 +97,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
                                         ")", nativeQuery = true)
         Page<Post> searchPostsWeighted(@Param("keyword") String keyword, Pageable pageable);
 
+        @Query("SELECT p FROM Post p JOIN p.tags t WHERE LOWER(t.name) = LOWER(:tagName) AND p.isPublished = true")
+        Page<Post> findByTagNameAndPublished(@Param("tagName") String tagName, Pageable pageable);
+
 }

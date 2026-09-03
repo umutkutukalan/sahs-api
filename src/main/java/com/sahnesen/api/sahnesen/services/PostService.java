@@ -411,4 +411,10 @@ public class PostService {
         return tagRepository.searchTags(query.trim());
     }
 
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponse> getPostsByTag(String tagName, Pageable pageable) {
+        return postRepository.findByTagNameAndPublished(tagName, pageable)
+                .map(this::convertToSummaryResponse);
+    }
+
 }
