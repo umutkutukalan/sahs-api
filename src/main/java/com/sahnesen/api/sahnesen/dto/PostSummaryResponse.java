@@ -20,7 +20,5 @@ public record PostSummaryResponse(
                 String authorName,
                 String authorSurname,
                 String authorUsername,
-                String authorProfileImg
-// 💡 Content ALANI BURADA YOK!
-) {
+                String authorProfileImg) {
 }

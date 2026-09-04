@@ -252,12 +252,16 @@ public class PostService {
     public void deletePost(String username, Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new RuntimeException("Silinmek istenen post bulunamadı"));
-        postRepository.delete(post);
 
+        // Yetki kontrolü (Yazının sahibi mi?)
         if (!post.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Bu postu silme yetkiniz yok");
         }
 
+        // Önce varsa Redis'teki trending skorunu temizleyelim ki öksüz kalmasın
+        redisTemplate.opsForZSet().remove(TRENDING_KEY, post.getSlug());
+
+        // Veritabanından postu sil
         postRepository.delete(post);
     }
 
@@ -344,6 +348,13 @@ public class PostService {
                 ? post.getTags().stream().map(Tag::getName).toList()
                 : Collections.emptyList();
 
+        // Redis'ten bu postun güncel view count değerini çekiyoruz
+        Double score = redisTemplate.opsForZSet().score(TRENDING_KEY, post.getSlug());
+
+        // Null-safe (Güvenli) bir şekilde son değeri belirliyoruz
+        Long dbViewCount = post.getViewCount() != null ? post.getViewCount() : 0L;
+        Long finalViewCount = (score != null) ? score.longValue() : dbViewCount;
+
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
@@ -353,7 +364,7 @@ public class PostService {
                 post.getPostType(),
                 tagNames,
                 post.getCreatedAt(),
-                post.getViewCount(),
+                finalViewCount,
                 post.getDiscussionEndsAt(),
                 post.getDiscussionDurationHours(),
                 post.getUser().getName(),
