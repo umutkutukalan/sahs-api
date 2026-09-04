@@ -76,6 +76,15 @@ public class Post {
     @Column(name = "view_count")
     private Long viewCount = 0L;
 
+    // Fuaye / Tartışma süresi (Saat cinsinden, örn: 3, 12, 24 vb.)
+    @Column(name = "discussion_duration_hours")
+    @Builder.Default
+    private Integer discussionDurationHours = 3; // Varsayılan olarak 3 saat belirleyebiliriz
+
+    // Fuayenin kapanacağı kesin zaman (createdAt + discussionDurationHours)
+    @Column(name = "discussion_ends_at")
+    private LocalDateTime discussionEndsAt;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 

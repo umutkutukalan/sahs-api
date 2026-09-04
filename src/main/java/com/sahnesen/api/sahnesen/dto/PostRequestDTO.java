@@ -36,4 +36,6 @@ public class PostRequestDTO {
     @JsonProperty("isPublished") // Jackson'ın 'is' ekini yutmasını engeller
     private boolean isPublished = false; // Direkt yayınlamak mı isteriz yoksa taslak mı kalsın?
 
+    private Integer discussionDurationHours = 3; // Varsayılan 3 saat
+
 }

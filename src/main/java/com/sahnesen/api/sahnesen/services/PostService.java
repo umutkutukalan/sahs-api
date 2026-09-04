@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -92,6 +93,14 @@ public class PostService {
             finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
         }
 
+        // Süre hesaplama mantığı (Eğer DTO'dan gelmezse varsayılan 3 saat alınır)
+        int durationHours = (request.getDiscussionDurationHours() != null && request.getDiscussionDurationHours() > 0)
+                ? request.getDiscussionDurationHours()
+                : 3;
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime endsAt = now.plusHours(durationHours);
+
         // 3. Post nesnesini inşa et
         Post post = Post.builder()
                 .postType(request.getPostType())
@@ -103,6 +112,8 @@ public class PostService {
                 .user(user)
                 .tags(processAndGetTags(request.getTags()))
                 .isPublished(request.isPublished())
+                .discussionDurationHours(durationHours)
+                .discussionEndsAt(endsAt)
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -200,6 +211,17 @@ public class PostService {
             finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
         }
 
+        // Süre güncellemesi
+        int durationHours = (request.getDiscussionDurationHours() != null && request.getDiscussionDurationHours() > 0)
+                ? request.getDiscussionDurationHours()
+                : (post.getDiscussionDurationHours() != null ? post.getDiscussionDurationHours() : 3);
+
+        // Eğer yazı yeni yayınlanıyorsa veya süre değiştiyse bitiş zamanını yeniden
+        // hesapla
+        if (request.isPublished() && !post.isPublished()) {
+            post.setDiscussionEndsAt(LocalDateTime.now().plusHours(durationHours));
+        }
+
         post.setTitle(request.getTitle());
         post.setSubtitle(finalSubtitle);
         post.setContent(jsonContentString);
@@ -207,6 +229,7 @@ public class PostService {
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());
         post.setTags(processAndGetTags(request.getTags()));
+        post.setDiscussionDurationHours(durationHours);
 
         Post savedPost = postRepository.save(post);
         return convertToResponse(savedPost);
