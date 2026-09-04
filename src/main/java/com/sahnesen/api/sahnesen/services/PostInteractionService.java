@@ -156,6 +156,8 @@ public class PostInteractionService {
                                         tagNames,
                                         post.getCreatedAt(),
                                         post.getViewCount(),
+                                        post.getDiscussionEndsAt(),
+                                        post.getDiscussionDurationHours(),
                                         author != null ? author.getName() : null,
                                         author != null ? author.getSurname() : null,
                                         author != null ? author.getUsername() : null,

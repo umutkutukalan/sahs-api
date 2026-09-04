@@ -38,6 +38,9 @@ public class PostResponse implements Serializable {
     private LocalDateTime createdAt;
     private Long viewCount; // Görüntülenme sayısı, Redis'ten çekilecek
 
+    private LocalDateTime discussionEndsAt;
+    private Integer discussionDurationHours;
+
     // Yazar Bilgileri (Sadece gerekli olanlar)
     private String authorName;
     private String authorSurname;

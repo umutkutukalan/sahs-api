@@ -354,6 +354,8 @@ public class PostService {
                 tagNames,
                 post.getCreatedAt(),
                 post.getViewCount(),
+                post.getDiscussionEndsAt(),
+                post.getDiscussionDurationHours(),
                 post.getUser().getName(),
                 post.getUser().getSurname(),
                 post.getUser().getUsername(),
@@ -380,6 +382,8 @@ public class PostService {
                 .tags(tagNames)
                 .isPublished(post.isPublished())
                 .createdAt(post.getCreatedAt())
+                .discussionEndsAt(post.getDiscussionEndsAt())
+                .discussionDurationHours(post.getDiscussionDurationHours())
                 .authorName(post.getUser().getName())
                 .authorSurname(post.getUser().getSurname())
                 .authorUsername(post.getUser().getUsername())

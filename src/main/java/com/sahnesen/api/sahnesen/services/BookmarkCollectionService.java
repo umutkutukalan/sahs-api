@@ -1,5 +1,6 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
+import com.sahnesen.api.sahnesen.entities.Tag;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
@@ -64,6 +66,11 @@ public class BookmarkCollectionService {
     }
 
     private PostSummaryResponse convertToSummaryResponse(Post post) {
+
+        List<String> tagNames = post.getTags() != null
+                ? post.getTags().stream().map(Tag::getName).toList()
+                : Collections.emptyList();
+
         return new PostSummaryResponse(
                 post.getId(),
                 post.getTitle(),
@@ -71,8 +78,11 @@ public class BookmarkCollectionService {
                 post.getSlug(),
                 post.getCoverImage(),
                 post.getPostType(),
+                tagNames,
                 post.getCreatedAt(),
                 post.getViewCount(),
+                post.getDiscussionEndsAt(),
+                post.getDiscussionDurationHours(),
                 post.getUser().getName(),
                 post.getUser().getSurname(),
                 post.getUser().getUsername(),
