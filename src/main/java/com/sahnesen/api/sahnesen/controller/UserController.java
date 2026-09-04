@@ -92,4 +92,9 @@ public class UserController {
     public ResponseEntity<List<SocialMediaPlatform>> getPublicSocials(@PathVariable String username) {
         return ResponseEntity.ok(socialMediaService.getPublicPlatformsByUsername(username));
     }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<PublicUserDTO>> searchUsers(@RequestParam("query") String query) {
+        return ResponseEntity.ok(userService.searchUsers(query));
+    }
 }

@@ -1,5 +1,8 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -246,5 +249,32 @@ public class UserService {
 
         userRepository.save(user);
         return fileName;
+    }
+
+    @Transactional(readOnly = true)
+    public List<PublicUserDTO> searchUsers(String query) {
+        if (query == null || query.isBlank()) {
+            return Collections.emptyList();
+        }
+        return userRepository.searchUsers(query.trim())
+                .stream()
+                .map(this::convertToPublicUserDTO) // Varsa mevcut dönüştürücü metodun, yoksa manuel mapping
+                .toList();
+    }
+
+    private PublicUserDTO convertToPublicUserDTO(User user) {
+        return PublicUserDTO.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .name(user.getName())
+                .surname(user.getSurname())
+                .profileImg(user.getProfileImg())
+                .coverImg(user.getCoverImg())
+                .bio(user.getBio())
+                .motto(user.getMotto())
+                .city(user.getCity())
+                .district(user.getDistrict())
+                .role(user.getRole() != null ? user.getRole().name() : null)
+                .build();
     }
 }
