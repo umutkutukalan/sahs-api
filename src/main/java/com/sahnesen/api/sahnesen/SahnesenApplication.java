@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen;
 
+import java.util.TimeZone;
+
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -13,8 +15,8 @@ import com.sahnesen.api.sahnesen.config.ConfigLoader;
  * arkada iş koşturacağım" diyoruz)
  */
 public class SahnesenApplication {
-
 	public static void main(String[] args) {
+		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 		ConfigLoader.load();
 		SpringApplication.run(SahnesenApplication.class, args);
 	}
