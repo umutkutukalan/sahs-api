@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -166,6 +167,16 @@ public class PostService {
             Pageable pageable) {
         return postRepository.findMyOwnPostsWithFilter(username, isPublished, postType, pageable)
                 .map(this::convertToResponse);
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Long> getMyPostCounts(String username, PostType postType) {
+        long publishedCount = postRepository.countByUsernameAndPublishStatus(username, true, postType);
+        long draftCount = postRepository.countByUsernameAndPublishStatus(username, false, postType);
+
+        return Map.of(
+                "published", publishedCount,
+                "draft", draftCount);
     }
 
     @Transactional

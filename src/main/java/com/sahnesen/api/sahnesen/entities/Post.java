@@ -88,6 +88,10 @@ public class Post {
     @Builder.Default
     private boolean isPublished = false;
 
+    @Builder.Default
+    @Column(name = "is_archived")
+    private boolean isArchived = false;
+
     @Column(name = "view_count")
     private Long viewCount = 0L;
 

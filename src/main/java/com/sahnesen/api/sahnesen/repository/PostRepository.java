@@ -100,4 +100,29 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         @Query("SELECT p FROM Post p JOIN p.tags t WHERE LOWER(t.name) = LOWER(:tagName) AND p.isPublished = true")
         Page<Post> findByTagNameAndPublished(@Param("tagName") String tagName, Pageable pageable);
 
+        @Query("SELECT COUNT(p) FROM Post p WHERE p.user.username = :username AND p.isPublished = :isPublished AND (:postType IS NULL OR p.postType = :postType)")
+        long countByUsernameAndPublishStatus(@Param("username") String username,
+                        @Param("isPublished") boolean isPublished,
+                        @Param("postType") PostType postType);
+
+        @Query("SELECT p FROM Post p WHERE p.user.username = :username " +
+                        "AND p.isArchived = :isArchived " +
+                        "AND (:isPublished IS NULL OR p.isPublished = :isPublished) " +
+                        "AND (:postType IS NULL OR p.postType = :postType)")
+        Page<Post> findMyOwnPostsWithArchiveFilter(@Param("username") String username,
+                        @Param("isArchived") boolean isArchived,
+                        @Param("isPublished") Boolean isPublished,
+                        @Param("postType") PostType postType,
+                        Pageable pageable);
+
+        // Arşiv dahil sayıları veya filtreli sayımları almak için:
+        @Query("SELECT COUNT(p) FROM Post p WHERE p.user.username = :username " +
+                        "AND p.isArchived = :isArchived " +
+                        "AND (:isPublished IS NULL OR p.isPublished = :isPublished) " +
+                        "AND (:postType IS NULL OR p.postType = :postType)")
+        long countByUsernameAndArchiveStatus(@Param("username") String username,
+                        @Param("isArchived") boolean isArchived,
+                        @Param("isPublished") Boolean isPublished,
+                        @Param("postType") PostType postType);
+
 }

@@ -62,6 +62,13 @@ public class PostController {
         return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, postType, pageable));
     }
 
+    @GetMapping("/me/counts")
+    public ResponseEntity<Map<String, Long>> getMyPostCounts(
+            Principal principal,
+            @RequestParam(required = false) PostType postType) {
+        return ResponseEntity.ok(postService.getMyPostCounts(principal.getName(), postType));
+    }
+
     @PutMapping("/me/{postId}")
     public ResponseEntity<PostResponse> updateMyPost(
             @PathVariable Long postId,
