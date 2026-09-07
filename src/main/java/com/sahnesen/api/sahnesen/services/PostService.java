@@ -171,12 +171,14 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Map<String, Long> getMyPostCounts(String username, PostType postType) {
-        long publishedCount = postRepository.countByUsernameAndPublishStatus(username, true, postType);
-        long draftCount = postRepository.countByUsernameAndPublishStatus(username, false, postType);
+        long publishedCount = postRepository.countByUsernameAndArchiveStatus(username, false, true, postType);
+        long draftCount = postRepository.countByUsernameAndArchiveStatus(username, false, false, postType);
+        long archiveCount = postRepository.countByUsernameAndArchiveStatus(username, true, null, postType);
 
         return Map.of(
                 "published", publishedCount,
-                "draft", draftCount);
+                "draft", draftCount,
+                "archive", archiveCount);
     }
 
     @Transactional
@@ -464,6 +466,30 @@ public class PostService {
     public Page<PostSummaryResponse> getPostsByTag(String tagName, Pageable pageable) {
         return postRepository.findByTagNameAndPublished(tagName, pageable)
                 .map(this::convertToSummaryResponse);
+    }
+
+    @Transactional
+    public PostResponse toggleArchivePost(String username, Long postId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            String actionText = post.isArchived() ? "arşivden çıkarmaya" : "arşivlemeye";
+            throw new RuntimeException("Bu yazıyı " + actionText + " yetkiniz yok");
+        }
+
+        // Arşiv durumunu tersine çeviriyoruz (Arşivdeyse çıkar, değilse arşive at)
+        // Arşive atılan yazı yayından düşebilir (isPublished = false yapabiliriz ya da
+        // ayrı tutabiliriz)
+        boolean newArchiveState = !post.isArchived();
+        post.setArchived(newArchiveState);
+
+        if (newArchiveState) {
+            post.setPublished(false); // Arşive giren yazı yayından kalkar
+        }
+
+        Post savedPost = postRepository.save(post);
+        return convertToResponse(savedPost);
     }
 
 }
