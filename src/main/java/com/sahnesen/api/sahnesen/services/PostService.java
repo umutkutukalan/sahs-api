@@ -163,9 +163,9 @@ public class PostService {
     // Sadece giriş yapan kullanıcının kendi (taslaklar dahil) tüm postlarını
     // görmesi için
     @Transactional(readOnly = true)
-    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, PostType postType,
+    public Page<PostResponse> getMyOwnPosts(String username, Boolean isPublished, Boolean isArchived, PostType postType,
             Pageable pageable) {
-        return postRepository.findMyOwnPostsWithFilter(username, isPublished, postType, pageable)
+        return postRepository.findMyOwnPostsWithFilter(username, isPublished, isArchived, postType, pageable)
                 .map(this::convertToResponse);
     }
 
@@ -405,6 +405,7 @@ public class PostService {
                 .postType(post.getPostType())
                 .tags(tagNames)
                 .isPublished(post.isPublished())
+                .isArchived(post.isArchived())
                 .createdAt(post.getCreatedAt())
                 .discussionEndsAt(post.getDiscussionEndsAt())
                 .discussionDurationHours(post.getDiscussionDurationHours())

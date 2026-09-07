@@ -35,6 +35,9 @@ public class PostResponse implements Serializable {
     @JsonProperty("isPublished")
     private boolean isPublished;
 
+    @JsonProperty("isArchived")
+    private boolean isArchived;
+
     private LocalDateTime createdAt;
     private Long viewCount; // Görüntülenme sayısı, Redis'ten çekilecek
 
@@ -51,4 +54,7 @@ public class PostResponse implements Serializable {
         return isPublished;
     }
 
+    public boolean isArchived() {
+        return isArchived;
+    }
 }

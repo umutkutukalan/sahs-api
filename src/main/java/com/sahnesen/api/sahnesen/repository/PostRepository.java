@@ -52,9 +52,11 @@ public interface PostRepository extends JpaRepository<Post, Long> {
         // 3. Kullanıcının Kendi Yazıları / Taslakları (Filtreli / Filtresiz)
         @Query("SELECT p FROM Post p WHERE p.user.username = :username " +
                         "AND (:isPublished IS NULL OR p.isPublished = :isPublished) " +
+                        "AND (:isArchived IS NULL OR p.isArchived = :isArchived) " +
                         "AND (:postType IS NULL OR p.postType = :postType)")
         Page<Post> findMyOwnPostsWithFilter(@Param("username") String username,
                         @Param("isPublished") Boolean isPublished,
+                        @Param("isArchived") Boolean isArchived,
                         @Param("postType") PostType postType,
                         Pageable pageable);
 

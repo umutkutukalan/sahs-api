@@ -57,9 +57,11 @@ public class PostController {
     public ResponseEntity<Page<PostResponse>> getMyPosts(
             Principal principal,
             @RequestParam(required = false) Boolean isPublished,
+            @RequestParam(required = false) Boolean isArchived,
             @RequestParam(required = false) PostType postType,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, postType, pageable));
+        return ResponseEntity.ok(postService.getMyOwnPosts(principal.getName(), isPublished, isArchived, postType,
+                pageable));
     }
 
     @GetMapping("/me/counts")
@@ -168,6 +170,15 @@ public class PostController {
             @PathVariable String tagName,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(postService.getPostsByTag(tagName, pageable));
+    }
+
+    // Arşive al / Arşivden çıkar endpoint'i
+    @PutMapping("/me/{postId}/archive")
+    public ResponseEntity<PostResponse> toggleArchiveMyPost(
+            @PathVariable Long postId,
+            Principal principal) {
+        PostResponse updatedPost = postService.toggleArchivePost(principal.getName(), postId);
+        return ResponseEntity.ok(updatedPost);
     }
 
 }
