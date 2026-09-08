@@ -395,6 +395,13 @@ public class PostService {
                 ? post.getTags().stream().map(Tag::getName).toList()
                 : Collections.emptyList();
 
+        // Redis'ten bu postun güncel view count değerini çekiyoruz
+        Double score = redisTemplate.opsForZSet().score(TRENDING_KEY, post.getSlug());
+
+        // Null-safe (Güvenli) bir şekilde son değeri belirliyoruz
+        Long dbViewCount = post.getViewCount() != null ? post.getViewCount() : 0L;
+        Long finalViewCount = (score != null) ? score.longValue() : dbViewCount;
+
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
@@ -407,6 +414,7 @@ public class PostService {
                 .isPublished(post.isPublished())
                 .isArchived(post.isArchived())
                 .createdAt(post.getCreatedAt())
+                .viewCount(finalViewCount)
                 .discussionEndsAt(post.getDiscussionEndsAt())
                 .discussionDurationHours(post.getDiscussionDurationHours())
                 .authorName(post.getUser().getName())
@@ -479,14 +487,15 @@ public class PostService {
             throw new RuntimeException("Bu yazıyı " + actionText + " yetkiniz yok");
         }
 
-        // Arşiv durumunu tersine çeviriyoruz (Arşivdeyse çıkar, değilse arşive at)
-        // Arşive atılan yazı yayından düşebilir (isPublished = false yapabiliriz ya da
-        // ayrı tutabiliriz)
         boolean newArchiveState = !post.isArchived();
         post.setArchived(newArchiveState);
 
         if (newArchiveState) {
-            post.setPublished(false); // Arşive giren yazı yayından kalkar
+            // Arşive atıldığında yayından düşer
+            post.setPublished(false);
+        } else {
+            // Arşivden çıkarıldığında doğrudan tekrar Sahnede (yayında) olur
+            post.setPublished(true);
         }
 
         Post savedPost = postRepository.save(post);
