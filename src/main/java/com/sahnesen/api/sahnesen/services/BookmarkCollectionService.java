@@ -8,7 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sahnesen.api.sahnesen.dto.BookmarkCollectionResponse;
 import com.sahnesen.api.sahnesen.dto.CreateCollectionRequest;
+import com.sahnesen.api.sahnesen.dto.PostPreviewDTO;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.Post;
@@ -39,9 +41,28 @@ public class BookmarkCollectionService {
     }
 
     @Transactional(readOnly = true)
-    public List<BookmarkCollection> getUserCollections(String username) {
-        // userId yerine direkt username tabanlı repository metodu kullanılıyor
-        return collectionRepository.findByUser_Username(username);
+    public List<BookmarkCollectionResponse> getUserCollections(String username) {
+        List<BookmarkCollection> collections = collectionRepository.findByUser_Username(username);
+
+        return collections.stream().map(col -> {
+            // Son eklenen 4 postu alıp PostPreviewDTO'ya dönüştürüyoruz
+            List<PostPreviewDTO> previewContents = col.getBookmarks() != null ? col.getBookmarks().stream()
+                    .sorted((b1, b2) -> b2.getId().compareTo(b1.getId())) // En son eklenenler önce gelsin
+                    .limit(4)
+                    .map(b -> new PostPreviewDTO(
+                            b.getPost().getId(),
+                            b.getPost().getTitle(),
+                            b.getPost().getCoverImage()))
+                    .toList()
+                    : Collections.emptyList();
+
+            return new BookmarkCollectionResponse(
+                    col.getId(),
+                    col.getName(),
+                    col.getDescription(),
+                    col.isDefault(),
+                    previewContents);
+        }).toList();
     }
 
     @Transactional
