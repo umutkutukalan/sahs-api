@@ -114,7 +114,8 @@ public class BookmarkCollectionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> getPostsByCollectionId(String username, Long collectionId, Pageable pageable) {
+    public Page<PostSummaryResponse> getPostsByCollectionId(String username, Long collectionId, PostType postType,
+            Pageable pageable) {
         BookmarkCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
 
@@ -123,7 +124,8 @@ public class BookmarkCollectionService {
             throw new RuntimeException("Bu koleksiyona erişim yetkiniz yok.");
         }
 
-        Page<PostBookmark> bookmarks = bookmarkRepository.findByCollectionId(collectionId, pageable);
+        Page<PostBookmark> bookmarks = bookmarkRepository.findByCollectionIdAndPostType(collectionId, postType,
+                pageable);
         return bookmarks.map(bookmark -> convertToSummaryResponse(bookmark.getPost()));
     }
 

@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
 import com.sahnesen.api.sahnesen.enums.PostType;
@@ -35,5 +37,11 @@ public interface PostBookmarkRepository extends JpaRepository<PostBookmark, Long
     // (post birden fazla koleksiyona kaydedilmiş olabileceği için Optional değil
     // List)
     List<PostBookmark> findAllByCollection_User_UsernameAndPostId(String username, Long postId);
+
+    @Query("SELECT b FROM PostBookmark b WHERE b.collection.id = :collectionId AND (:postType IS NULL OR b.post.postType = :postType)")
+    Page<PostBookmark> findByCollectionIdAndPostType(
+            @Param("collectionId") Long collectionId,
+            @Param("postType") PostType postType,
+            Pageable pageable);
 
 }

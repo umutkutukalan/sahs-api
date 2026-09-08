@@ -86,11 +86,13 @@ public class BookmarkCollectionController {
     public ResponseEntity<Page<PostSummaryResponse>> getPostsByCollection(
             Principal principal,
             @PathVariable Long collectionId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @RequestParam(required = false) PostType postType,
+            @PageableDefault(size = 6, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(collectionService.getPostsByCollectionId(principal.getName(), collectionId, pageable));
+        return ResponseEntity
+                .ok(collectionService.getPostsByCollectionId(principal.getName(), collectionId, postType, pageable));
     }
 
     // Koleksiyonu güncelle (Düzenle)
