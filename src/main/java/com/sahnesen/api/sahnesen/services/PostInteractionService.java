@@ -2,6 +2,7 @@ package com.sahnesen.api.sahnesen.services;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,6 +18,7 @@ import com.sahnesen.api.sahnesen.entities.PostBookmark;
 import com.sahnesen.api.sahnesen.entities.PostReaction;
 import com.sahnesen.api.sahnesen.entities.Tag;
 import com.sahnesen.api.sahnesen.entities.User;
+import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
@@ -67,37 +69,53 @@ public class PostInteractionService {
         }
 
         @Transactional
-        public boolean toggleBookmark(String username, Long postId, Long collectionId) {
-                User user = getUserByUsername(username);
+        public void toggleBookmark(String username, Long postId, Long collectionId) {
+                Post post = postRepository.findById(postId)
+                                .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
 
-                BookmarkCollection collection;
                 if (collectionId != null) {
-                        collection = collectionRepository.findById(collectionId)
-                                        .orElseThrow(() -> new RuntimeException("Klasör bulunamadı"));
-                } else {
-                        collection = collectionRepository.findByUser_UsernameAndIsDefaultTrue(username)
-                                        .orElseGet(() -> collectionRepository.save(
-                                                        BookmarkCollection.builder()
-                                                                        .name("Kaydedilenler")
-                                                                        .isDefault(true)
-                                                                        .user(user)
-                                                                        .build()));
-                }
+                        // Belirli bir koleksiyona kaydetme/kaldırma (modal üzerinden gelen çağrı)
+                        BookmarkCollection collection = collectionRepository.findById(collectionId)
+                                        .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı"));
 
-                var existing = bookmarkRepository.findByCollection_User_UsernameAndPostId(username, postId);
-                if (existing.isPresent()) {
-                        bookmarkRepository.delete(existing.get());
-                        return false;
-                } else {
-                        Post post = postRepository.findById(postId)
-                                        .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
+                        if (!collection.getUser().getUsername().equals(username)) {
+                                throw new RuntimeException("Yetkiniz yok.");
+                        }
 
-                        PostBookmark bookmark = PostBookmark.builder()
-                                        .collection(collection)
-                                        .post(post)
-                                        .build();
-                        bookmarkRepository.save(bookmark);
-                        return true;
+                        Optional<PostBookmark> existingBookmark = bookmarkRepository
+                                        .findByCollectionIdAndPostId(collection.getId(), postId);
+
+                        if (existingBookmark.isPresent()) {
+                                bookmarkRepository.delete(existingBookmark.get());
+                        } else {
+                                PostBookmark bookmark = PostBookmark.builder()
+                                                .collection(collection)
+                                                .post(post)
+                                                .build();
+                                bookmarkRepository.save(bookmark);
+                        }
+                } else {
+                        // collectionId gönderilmediyse: "kaydı tamamen kaldır" niyeti
+                        // Postun kullanıcı için sahip olduğu TÜM bookmark kayıtlarını sil
+                        List<PostBookmark> existingBookmarks = bookmarkRepository
+                                        .findAllByCollection_User_UsernameAndPostId(username, postId);
+
+                        if (!existingBookmarks.isEmpty()) {
+                                bookmarkRepository.deleteAll(existingBookmarks);
+                        } else {
+                                // Hiç kayıtlı değilse (edge case, normalde frontend buraya düşmemeli):
+                                // güvenlik amaçlı varsayılan koleksiyona ekle
+                                BookmarkCollection defaultCollection = collectionRepository
+                                                .findByUser_UsernameAndIsDefaultTrue(username)
+                                                .orElseThrow(() -> new RuntimeException(
+                                                                "Varsayılan koleksiyon bulunamadı"));
+
+                                PostBookmark bookmark = PostBookmark.builder()
+                                                .collection(defaultCollection)
+                                                .post(post)
+                                                .build();
+                                bookmarkRepository.save(bookmark);
+                        }
                 }
         }
 
@@ -129,17 +147,17 @@ public class PostInteractionService {
         }
 
         @Transactional(readOnly = true)
-        public Page<PostSummaryResponse> getLikedPosts(String username, Pageable pageable) {
+        public Page<PostSummaryResponse> getLikedPosts(String username,
+                        PostType postType, Pageable pageable) {
                 // Kullanıcının varlığını doğrula
                 getUserByUsername(username);
 
-                // Kullanıcının LIKE türündeki reaksiyonlarını sayfalı olarak çek
-                Page<PostReaction> reactions = reactionRepository.findByUser_UsernameAndReactionType(
-                                username, ReactionType.LIKE, pageable);
+                // Repository üzerinden doğrudan filtrelenmiş Post nesnelerini çek
+                Page<Post> posts = reactionRepository.findLikedPostsByUsernameWithFilter(
+                                username, ReactionType.LIKE, postType, pageable);
 
                 // Post nesnelerini PostSummaryResponse record'una map et
-                return reactions.map(reaction -> {
-                        Post post = reaction.getPost();
+                return posts.map(post -> {
                         var author = post.getUser();
 
                         List<String> tagNames = post.getTags() != null

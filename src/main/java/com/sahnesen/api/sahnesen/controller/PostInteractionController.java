@@ -20,7 +20,6 @@ import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.services.PostInteractionService;
 
-import io.lettuce.core.GeoArgs.Sort;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -43,15 +42,15 @@ public class PostInteractionController {
     }
 
     @PostMapping("/{postId}/bookmarks/toggle")
-    public ResponseEntity<?> toggleBookmark(
+    public ResponseEntity<Boolean> toggleBookmark(
             Principal principal,
             @PathVariable Long postId,
             @RequestParam(required = false) Long collectionId) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        boolean status = interactionService.toggleBookmark(principal.getName(), postId, collectionId);
-        return ResponseEntity.ok(Map.of("bookmarked", status));
+        interactionService.toggleBookmark(principal.getName(), postId, collectionId);
+        return ResponseEntity.ok(true);
     }
 
     @GetMapping("/{postId}/interactions")
@@ -67,11 +66,12 @@ public class PostInteractionController {
 
     @GetMapping("/liked")
     public ResponseEntity<Page<PostSummaryResponse>> getLikedPosts(
+            @RequestParam(required = false) com.sahnesen.api.sahnesen.enums.PostType postType,
             Principal principal,
             @PageableDefault(size = 5, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        return ResponseEntity.ok(interactionService.getLikedPosts(principal.getName(), pageable));
+        return ResponseEntity.ok(interactionService.getLikedPosts(principal.getName(), postType, pageable));
     }
 }
