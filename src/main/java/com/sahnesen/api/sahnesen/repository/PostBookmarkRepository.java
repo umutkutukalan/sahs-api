@@ -17,6 +17,8 @@ public interface PostBookmarkRepository extends JpaRepository<PostBookmark, Long
     // Kullanıcının username'i ve postId'sine göre bookmark var mı kontrol et
     boolean existsByCollection_User_UsernameAndPostId(String username, Long postId);
 
+    boolean existsByCollectionIdAndPostId(Long collectionId, Long postId);
+
     Page<PostBookmark> findByCollectionId(Long collectionId, Pageable pageable);
 
     // Doğrudan username üzerinden kullanıcının tüm kaydedilenlerini sayfalı getir

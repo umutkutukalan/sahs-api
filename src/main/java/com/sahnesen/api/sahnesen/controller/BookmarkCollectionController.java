@@ -11,6 +11,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,5 +64,17 @@ public class BookmarkCollectionController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         return ResponseEntity.ok(collectionService.createCollection(principal.getName(), request));
+    }
+
+    @PostMapping("/{collectionId}/posts/{postId}")
+    public ResponseEntity<Void> addPostToCollection(
+            Principal principal,
+            @PathVariable Long collectionId,
+            @PathVariable Long postId) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        collectionService.addPostToCollection(principal.getName(), collectionId, postId);
+        return ResponseEntity.ok().build();
     }
 }

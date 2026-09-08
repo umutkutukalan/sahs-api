@@ -18,6 +18,7 @@ import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
+import com.sahnesen.api.sahnesen.repository.PostRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,7 @@ public class BookmarkCollectionService {
 
     private final BookmarkCollectionRepository collectionRepository;
     private final PostBookmarkRepository bookmarkRepository;
+    private final PostRepository postRepository;
     private final UserRepository userRepository;
 
     // Yardımcı metot: Username üzerinden User nesnesini bulur
@@ -63,6 +65,31 @@ public class BookmarkCollectionService {
         Page<PostBookmark> bookmarks = bookmarkRepository.findByCollection_User_Username(username, postType, pageable);
 
         return bookmarks.map(bookmark -> convertToSummaryResponse(bookmark.getPost()));
+    }
+
+    @Transactional
+    public void addPostToCollection(String username, Long collectionId, Long postId) {
+        BookmarkCollection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
+
+        // Güvenlik kontrolü: Bu koleksiyon gerçekten bu kullanıcıya mı ait?
+        if (!collection.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu koleksiyona içerik ekleme yetkiniz yok.");
+        }
+
+        // 💡 Doğru olan: Post'u postId üzerinden buluyoruz
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Post bulunamadı: " + postId));
+
+        // Daha önce bu koleksiyona eklenmiş mi kontrol et
+        boolean alreadyExists = bookmarkRepository.existsByCollectionIdAndPostId(collectionId, postId);
+        if (!alreadyExists) {
+            PostBookmark bookmark = PostBookmark.builder()
+                    .collection(collection)
+                    .post(post)
+                    .build();
+            bookmarkRepository.save(bookmark);
+        }
     }
 
     private PostSummaryResponse convertToSummaryResponse(Post post) {
