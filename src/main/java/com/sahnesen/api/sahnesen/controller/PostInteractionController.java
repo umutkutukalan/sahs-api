@@ -68,7 +68,7 @@ public class PostInteractionController {
     public ResponseEntity<Page<PostSummaryResponse>> getLikedPosts(
             @RequestParam(required = false) com.sahnesen.api.sahnesen.enums.PostType postType,
             Principal principal,
-            @PageableDefault(size = 5, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 6, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

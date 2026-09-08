@@ -50,7 +50,7 @@ public class BookmarkCollectionController {
     public ResponseEntity<Page<PostSummaryResponse>> getBookmarkedPosts(
             Principal principal,
             @RequestParam(required = false) PostType postType, // İleride türe göre filtrelemek istersen diye
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 6, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
