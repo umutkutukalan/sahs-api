@@ -127,6 +127,45 @@ public class BookmarkCollectionService {
         return bookmarks.map(bookmark -> convertToSummaryResponse(bookmark.getPost()));
     }
 
+    @Transactional
+    public BookmarkCollection updateCollection(String username, Long collectionId, CreateCollectionRequest request) {
+        BookmarkCollection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
+
+        // Güvenlik kontrolü
+        if (!collection.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu koleksiyonu düzenleme yetkiniz yok.");
+        }
+
+        // Varsayılan koleksiyonların ismi değiştirilmek istenmeyebilir (İsteğe bağlı
+        // kural)
+        if (collection.isDefault()) {
+            throw new RuntimeException("Varsayılan koleksiyonlar düzenlenemez.");
+        }
+
+        collection.setName(request.name());
+        collection.setDescription(request.description());
+
+        return collectionRepository.save(collection);
+    }
+
+    @Transactional
+    public void deleteCollection(String username, Long collectionId) {
+        BookmarkCollection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
+
+        // Güvenlik kontrolü
+        if (!collection.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu koleksiyonu silme yetkiniz yok.");
+        }
+
+        if (collection.isDefault()) {
+            throw new RuntimeException("Varsayılan koleksiyonlar silinemez.");
+        }
+
+        collectionRepository.delete(collection);
+    }
+
     private PostSummaryResponse convertToSummaryResponse(Post post) {
 
         List<String> tagNames = post.getTags() != null
