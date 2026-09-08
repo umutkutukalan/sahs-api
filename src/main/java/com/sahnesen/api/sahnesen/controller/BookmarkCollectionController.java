@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sahnesen.api.sahnesen.dto.BookmarkCollectionResponse;
 import com.sahnesen.api.sahnesen.dto.CreateCollectionRequest;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
@@ -35,7 +36,7 @@ public class BookmarkCollectionController {
 
     // Kullanıcının klasörlerini getir
     @GetMapping
-    public ResponseEntity<List<BookmarkCollection>> getUserCollections(Principal principal) {
+    public ResponseEntity<List<BookmarkCollectionResponse>> getUserCollections(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
