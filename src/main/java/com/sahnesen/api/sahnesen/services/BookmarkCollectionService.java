@@ -92,6 +92,20 @@ public class BookmarkCollectionService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public Page<PostSummaryResponse> getPostsByCollectionId(String username, Long collectionId, Pageable pageable) {
+        BookmarkCollection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
+
+        // Güvenlik kontrolü
+        if (!collection.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu koleksiyona erişim yetkiniz yok.");
+        }
+
+        Page<PostBookmark> bookmarks = bookmarkRepository.findByCollectionId(collectionId, pageable);
+        return bookmarks.map(bookmark -> convertToSummaryResponse(bookmark.getPost()));
+    }
+
     private PostSummaryResponse convertToSummaryResponse(Post post) {
 
         List<String> tagNames = post.getTags() != null

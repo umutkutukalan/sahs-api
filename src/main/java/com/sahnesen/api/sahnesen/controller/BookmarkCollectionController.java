@@ -77,4 +77,16 @@ public class BookmarkCollectionController {
         collectionService.addPostToCollection(principal.getName(), collectionId, postId);
         return ResponseEntity.ok().build();
     }
+
+    // Belirli bir koleksiyonun içindeki postları getir
+    @GetMapping("/{collectionId}/posts")
+    public ResponseEntity<Page<PostSummaryResponse>> getPostsByCollection(
+            Principal principal,
+            @PathVariable Long collectionId,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(collectionService.getPostsByCollectionId(principal.getName(), collectionId, pageable));
+    }
 }
