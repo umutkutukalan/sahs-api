@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.dto.CommentRequestDTO;
@@ -46,5 +47,16 @@ public class CommentController {
 
         CommentResponseDTO savedComment = commentService.addComment(principal.getName(), postId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedComment);
+    }
+
+    // Belirli bir ana mektubun yanıtlarını sayfalı getir (Örn: sayfa başına 5 adet)
+    @GetMapping("/comments/{commentId}/replies")
+    public ResponseEntity<List<CommentResponseDTO>> getCommentReplies(
+            @PathVariable Long commentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        List<CommentResponseDTO> replies = commentService.getRepliesByCommentId(commentId, page, size);
+        return ResponseEntity.ok(replies);
     }
 }

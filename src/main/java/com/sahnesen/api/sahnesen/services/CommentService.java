@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -81,6 +83,16 @@ public class CommentService {
                 List<Comment> rootComments = commentRepository.findByPostIdAndParentIsNullOrderByCreatedAtAsc(postId);
 
                 return rootComments.stream()
+                                .map(this::convertToResponse)
+                                .collect(Collectors.toList());
+        }
+
+        @Transactional(readOnly = true)
+        public List<CommentResponseDTO> getRepliesByCommentId(Long commentId, int page, int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                List<Comment> replies = commentRepository.findByParentIdOrderByCreatedAtAsc(commentId, pageable);
+
+                return replies.stream()
                                 .map(this::convertToResponse)
                                 .collect(Collectors.toList());
         }
