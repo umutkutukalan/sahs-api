@@ -13,6 +13,7 @@ import com.sahnesen.api.sahnesen.dto.FollowDTO;
 import com.sahnesen.api.sahnesen.entities.Follow;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.BadgeCategory;
+import com.sahnesen.api.sahnesen.enums.NotificationType;
 import com.sahnesen.api.sahnesen.repository.FollowRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
@@ -28,6 +29,7 @@ public class FollowService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private final BadgeService badgeService;
+    private final NotificationService notificationService;
 
     private static final String FOLLOWERS_COUNT_KEY = "user:followers:count:";
     private static final String FOLLOWING_COUNT_KEY = "user:following:count:";
@@ -61,6 +63,18 @@ public class FollowService {
 
         if (newFollowerCount != null) {
             badgeService.checkAndAssignBadges(following.getId(), BadgeCategory.FOLLOWER, newFollowerCount.intValue());
+        }
+
+        // Takip Edilen Kişiye WebSocket Bildirimi Gönder
+        try {
+            notificationService.createNotification(
+                    following.getId(),
+                    "Yeni Takipçi",
+                    follower.getName() + " " + follower.getSurname() + " seni takip etmeye başladı.",
+                    NotificationType.FOLLOW,
+                    "/profil/" + follower.getUsername());
+        } catch (Exception e) {
+            log.error("Takip bildirimi gönderilemedi: ", e);
         }
 
         return savedFollow;

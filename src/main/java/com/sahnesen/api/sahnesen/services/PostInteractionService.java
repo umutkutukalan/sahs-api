@@ -18,6 +18,7 @@ import com.sahnesen.api.sahnesen.entities.PostBookmark;
 import com.sahnesen.api.sahnesen.entities.PostReaction;
 import com.sahnesen.api.sahnesen.entities.Tag;
 import com.sahnesen.api.sahnesen.entities.User;
+import com.sahnesen.api.sahnesen.enums.NotificationType;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
@@ -27,9 +28,11 @@ import com.sahnesen.api.sahnesen.repository.PostRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostInteractionService {
 
         private final PostReactionRepository reactionRepository;
@@ -37,6 +40,7 @@ public class PostInteractionService {
         private final BookmarkCollectionRepository collectionRepository;
         private final PostRepository postRepository;
         private final UserRepository userRepository;
+        private final NotificationService notificationService;
 
         private User getUserByUsername(String usernameOrEmail) {
                 return userRepository.findByUsername(usernameOrEmail)
@@ -64,6 +68,24 @@ public class PostInteractionService {
                                         .reactionType(reactionType)
                                         .build();
                         reactionRepository.save(reaction);
+
+                        // Eğer beğenilen tür LIKE ise ve postun sahibi beğenen kişi değilse bildirim at
+                        if (reactionType == ReactionType.LIKE && post.getUser() != null
+                                        && !post.getUser().getId().equals(user.getId())) {
+                                try {
+                                        notificationService.createNotification(
+                                                        post.getUser().getId(),
+                                                        "Yeni Beğeni",
+                                                        user.getName() + " " + user.getSurname() + " \""
+                                                                        + post.getTitle()
+                                                                        + "\" adlı içeriğini beğendi.",
+                                                        NotificationType.POST_LIKE,
+                                                        "/" + post.getUser().getUsername() + "/" + post.getSlug());
+                                } catch (Exception e) {
+                                        log.error("Beğeni bildirimi gönderilemedi: ", e);
+                                }
+                        }
+
                         return true; // Eklendi
                 }
         }

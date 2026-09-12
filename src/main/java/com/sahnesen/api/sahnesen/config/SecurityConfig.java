@@ -41,7 +41,8 @@ public class SecurityConfig {
                                                                 "/users/register",
                                                                 "/users/me", // 👈 KRİTİK
                                                                 "/auth/**",
-                                                                "/oauth2/**")
+                                                                "/oauth2/**",
+                                                                "/ws-sahnesen/**")
                                                 .permitAll()
 
                                                 // 🔓 PUBLIC READ
