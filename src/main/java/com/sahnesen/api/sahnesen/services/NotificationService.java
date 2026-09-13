@@ -6,6 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.sahnesen.api.sahnesen.dto.NotificationDTO;
+import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.entities.Notification;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.NotificationType;
@@ -24,13 +25,19 @@ public class NotificationService {
     private final SimpMessagingTemplate messagingTemplate; // WebSocket mesajlaşma için
 
     @Transactional
-    public void createNotification(Long userId, String title, String message, NotificationType type,
+    public void createNotification(Long userId, Long senderId, String title, String message, NotificationType type,
             String targetUrl) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Bildirim gönderilecek kullanıcı bulunamadı."));
 
+        User sender = null;
+        if (senderId != null) {
+            sender = userRepository.findById(senderId).orElse(null);
+        }
+
         Notification notification = Notification.builder()
                 .user(user)
+                .sender(sender)
                 .title(title)
                 .message(message)
                 .type(type)
@@ -40,21 +47,75 @@ public class NotificationService {
 
         Notification savedNotification = notificationRepository.save(notification);
 
+        // Sender varsa PublicUserDTO'ya dönüştür
+        PublicUserDTO senderDTO = null;
+        if (savedNotification.getSender() != null) {
+            User s = savedNotification.getSender();
+            senderDTO = PublicUserDTO.builder()
+                    .id(s.getId())
+                    .username(s.getUsername())
+                    .name(s.getName())
+                    .surname(s.getSurname())
+                    .slug(s.getSlug())
+                    .profileImg(s.getProfileImg())
+                    .coverImg(s.getCoverImg())
+                    .bio(s.getBio())
+                    .motto(s.getMotto())
+                    .city(s.getCity())
+                    .district(s.getDistrict())
+                    .role(s.getRole() != null ? s.getRole().name() : null)
+                    .build();
+        }
+
         NotificationDTO dto = NotificationDTO.builder()
                 .id(savedNotification.getId())
                 .title(savedNotification.getTitle())
                 .message(savedNotification.getMessage())
                 .type(savedNotification.getType())
                 .targetUrl(savedNotification.getTargetUrl())
+                .isRead(savedNotification.isRead())
                 .createdAt(savedNotification.getCreatedAt())
+                .sender(senderDTO)
                 .build();
 
         String destination = "/topic/notifications/" + userId;
         messagingTemplate.convertAndSend(destination, dto);
     }
 
-    public List<Notification> getUserNotifications(Long userId) {
-        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    public List<NotificationDTO> getUserNotifications(Long userId) {
+        List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
+
+        return notifications.stream().map(n -> {
+            PublicUserDTO senderDTO = null;
+            if (n.getSender() != null) {
+                User s = n.getSender();
+                senderDTO = PublicUserDTO.builder()
+                        .id(s.getId())
+                        .username(s.getUsername())
+                        .name(s.getName())
+                        .surname(s.getSurname())
+                        .slug(s.getSlug())
+                        .profileImg(s.getProfileImg())
+                        .coverImg(s.getCoverImg())
+                        .bio(s.getBio())
+                        .motto(s.getMotto())
+                        .city(s.getCity())
+                        .district(s.getDistrict())
+                        .role(s.getRole() != null ? s.getRole().name() : null)
+                        .build();
+            }
+
+            return NotificationDTO.builder()
+                    .id(n.getId())
+                    .title(n.getTitle())
+                    .message(n.getMessage())
+                    .type(n.getType())
+                    .targetUrl(n.getTargetUrl())
+                    .isRead(n.isRead())
+                    .createdAt(n.getCreatedAt())
+                    .sender(senderDTO)
+                    .build();
+        }).toList();
     }
 
     @Transactional
@@ -67,18 +128,12 @@ public class NotificationService {
         }
 
         notification.setRead(true);
-        // @Transactional sayesinde save dememize bile gerek yok, otomatik güncellenir.
     }
 
     @Transactional
     public void markAllAsRead(Long userId) {
-        // Veritabanında güncelliyoruz
         notificationRepository.markAllAsReadByUserId(userId);
 
-        // WebSocket ile frontend'e "READ_ALL" mesajı gönderiyoruz (Sıfırla bilgisi
-        // aslında)
-        // Sayacın sıfırlanmasını sağlıyoruz, böylece kullanıcı yeni bildirim gelene
-        // kadar 0 görür.
         String destination = "/topic/notifications/" + userId;
         NotificationDTO resetDto = NotificationDTO.builder()
                 .type(NotificationType.SYSTEM)
@@ -89,8 +144,6 @@ public class NotificationService {
 
     @Transactional
     public void notifyFollowers(Long authorId, String authorName, String postTitle, String postSlug) {
-        // 1. Yazarın takipçilerini getir (User içinde followers set'in olduğunu
-        // varsayıyorum)
         User author = userRepository.findById(authorId)
                 .orElseThrow(() -> new RuntimeException("Yazar bulunamadı."));
 
@@ -98,11 +151,10 @@ public class NotificationService {
         String message = authorName + " yeni bir içerik paylaştı: " + postTitle;
         String targetUrl = "/post/" + postSlug;
 
-        // 2. Her takipçi için bildirim oluştur
         author.getFollowers().forEach(follower -> {
-            // Mevcut createNotification metodunu her takipçi için çağırıyoruz
-            createNotification(follower.getId(), title, message, NotificationType.FOLLOWED_USER_POST, targetUrl);
+            // Takipçi bildirimlerinde gönderen (sender) olarak yazarın ID'sini geçiyoruz
+            createNotification(follower.getId(), authorId, title, message, NotificationType.FOLLOWED_USER_POST,
+                    targetUrl);
         });
     }
-
 }

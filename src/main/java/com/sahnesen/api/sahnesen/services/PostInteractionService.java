@@ -75,6 +75,7 @@ public class PostInteractionService {
                                 try {
                                         notificationService.createNotification(
                                                         post.getUser().getId(),
+                                                        user.getId(),
                                                         "Yeni Beğeni",
                                                         user.getName() + " " + user.getSurname() + " \""
                                                                         + post.getTitle()

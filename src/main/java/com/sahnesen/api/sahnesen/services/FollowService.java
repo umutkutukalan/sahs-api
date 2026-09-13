@@ -69,6 +69,7 @@ public class FollowService {
         try {
             notificationService.createNotification(
                     following.getId(),
+                    follower.getId(),
                     "Yeni Takipçi",
                     follower.getName() + " " + follower.getSurname() + " seni takip etmeye başladı.",
                     NotificationType.FOLLOW,

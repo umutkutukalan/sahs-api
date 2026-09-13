@@ -36,7 +36,11 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private User user; // Bildirimin sahibi (Kime gidiyor?)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sender_id")
+    private User sender; // Bildirimi tetikleyen kişi (Kim yaptı?) (Opsiyonel)
 
     private String title;
     private String message;

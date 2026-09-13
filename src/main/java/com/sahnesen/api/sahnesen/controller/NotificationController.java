@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.sahnesen.api.sahnesen.entities.Notification;
+import com.sahnesen.api.sahnesen.dto.NotificationDTO;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.repository.NotificationRepository;
 import com.sahnesen.api.sahnesen.services.NotificationService;
@@ -29,20 +29,15 @@ public class NotificationController {
     private final UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<Notification>> getMyNotifications(Principal principal) {
+    public ResponseEntity<List<NotificationDTO>> getMyNotifications(Principal principal) {
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // Principal.getName() genellikle username döner
-        // UserService'de username üzerinden ID bulan bir metodun olduğunu varsayıyoruz
         User user = userService.findByUsername(principal.getName());
-
-        // NotificationService üzerinden kronolojik listeyi çekiyoruz
-        List<Notification> notifications = notificationService.getUserNotifications(user.getId());
+        List<NotificationDTO> notifications = notificationService.getUserNotifications(user.getId());
 
         return ResponseEntity.ok(notifications);
-
     }
 
     @GetMapping("/unread-count")
