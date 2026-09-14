@@ -6,7 +6,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import com.sahnesen.api.sahnesen.dto.NotificationDTO;
-import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
+import com.sahnesen.api.sahnesen.dto.UserNotificationDTO;
 import com.sahnesen.api.sahnesen.entities.Notification;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.NotificationType;
@@ -48,21 +48,16 @@ public class NotificationService {
         Notification savedNotification = notificationRepository.save(notification);
 
         // Sender varsa PublicUserDTO'ya dönüştür
-        PublicUserDTO senderDTO = null;
+        UserNotificationDTO senderDTO = null;
         if (savedNotification.getSender() != null) {
             User s = savedNotification.getSender();
-            senderDTO = PublicUserDTO.builder()
+            senderDTO = UserNotificationDTO.builder()
                     .id(s.getId())
                     .username(s.getUsername())
                     .name(s.getName())
                     .surname(s.getSurname())
                     .slug(s.getSlug())
                     .profileImg(s.getProfileImg())
-                    .coverImg(s.getCoverImg())
-                    .bio(s.getBio())
-                    .motto(s.getMotto())
-                    .city(s.getCity())
-                    .district(s.getDistrict())
                     .role(s.getRole() != null ? s.getRole().name() : null)
                     .build();
         }
@@ -86,21 +81,16 @@ public class NotificationService {
         List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
         return notifications.stream().map(n -> {
-            PublicUserDTO senderDTO = null;
+            UserNotificationDTO senderDTO = null;
             if (n.getSender() != null) {
                 User s = n.getSender();
-                senderDTO = PublicUserDTO.builder()
+                senderDTO = UserNotificationDTO.builder()
                         .id(s.getId())
                         .username(s.getUsername())
                         .name(s.getName())
                         .surname(s.getSurname())
                         .slug(s.getSlug())
                         .profileImg(s.getProfileImg())
-                        .coverImg(s.getCoverImg())
-                        .bio(s.getBio())
-                        .motto(s.getMotto())
-                        .city(s.getCity())
-                        .district(s.getDistrict())
                         .role(s.getRole() != null ? s.getRole().name() : null)
                         .build();
             }

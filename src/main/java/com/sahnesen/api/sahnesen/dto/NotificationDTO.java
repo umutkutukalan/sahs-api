@@ -2,6 +2,7 @@ package com.sahnesen.api.sahnesen.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sahnesen.api.sahnesen.enums.NotificationType;
 
 import lombok.Builder;
@@ -15,7 +16,9 @@ public class NotificationDTO {
     private String message;
     private NotificationType type;
     private String targetUrl;
+    @JsonProperty("isRead")
     private boolean isRead;
     private LocalDateTime createdAt;
-    private PublicUserDTO sender;
+    private UserNotificationDTO sender;
+
 }

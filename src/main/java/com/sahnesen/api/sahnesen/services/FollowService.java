@@ -2,6 +2,7 @@ package com.sahnesen.api.sahnesen.services;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -148,7 +149,7 @@ public class FollowService {
             dto.setProfileImg(follow.getFollower().getProfileImg());
             dto.setFollowedAt(follow.getCreatedAt());
             return dto;
-        }).collect(java.util.stream.Collectors.toList());
+        }).collect(Collectors.toList());
     }
 
     public List<FollowDTO> getFollowingByUsername(String username, Pageable pageable) {
@@ -166,7 +167,7 @@ public class FollowService {
             dto.setProfileImg(follow.getFollowing().getProfileImg());
             dto.setFollowedAt(follow.getCreatedAt());
             return dto;
-        }).collect(java.util.stream.Collectors.toList());
+        }).collect(Collectors.toList());
     }
 
 }

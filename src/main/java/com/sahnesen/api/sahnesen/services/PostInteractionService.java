@@ -11,7 +11,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
-import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
@@ -76,10 +75,8 @@ public class PostInteractionService {
                                         notificationService.createNotification(
                                                         post.getUser().getId(),
                                                         user.getId(),
-                                                        "Yeni Beğeni",
-                                                        user.getName() + " " + user.getSurname() + " \""
-                                                                        + post.getTitle()
-                                                                        + "\" adlı içeriğini beğendi.",
+                                                        "Beğeni",
+                                                        " \"" + post.getTitle() + "\" adlı sahneni beğendi.",
                                                         NotificationType.POST_LIKE,
                                                         "/" + post.getUser().getUsername() + "/" + post.getSlug());
                                 } catch (Exception e) {

@@ -84,6 +84,7 @@ public class BadgeService {
 
         notificationService.createNotification(
                 userId,
+                null,
                 "Yeni Rozet!",
                 "'" + badge.getDisplayName() + "' rozetini kazandın! Sahne tozu yutmaya devam et.",
                 NotificationType.BADGE_EARNED,
