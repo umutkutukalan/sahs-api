@@ -1,6 +1,9 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +13,7 @@ import com.sahnesen.api.sahnesen.dto.UserNotificationDTO;
 import com.sahnesen.api.sahnesen.entities.Notification;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.NotificationType;
+import com.sahnesen.api.sahnesen.repository.FollowRepository;
 import com.sahnesen.api.sahnesen.repository.NotificationRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
@@ -22,6 +26,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
     private final SimpMessagingTemplate messagingTemplate; // WebSocket mesajlaşma için
 
     @Transactional
@@ -80,10 +85,23 @@ public class NotificationService {
     public List<NotificationDTO> getUserNotifications(Long userId) {
         List<Notification> notifications = notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
 
+        // 1. Bu bildirimlerdeki tüm sender ID'lerini topla (null olanları ayıkla)
+        Set<Long> senderIds = notifications.stream()
+                .map(n -> n.getSender() != null ? n.getSender().getId() : null)
+                .filter(java.util.Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // 2. Giriş yapan kullanıcının (userId) bu sender'lardan hangilerini takip
+        // ettiğini tek sorguda çek
+        Set<Long> followedSenderIds = senderIds.isEmpty() ? Collections.emptySet()
+                : followRepository.findFollowingIdsByFollowerIdAndTargetIds(userId, senderIds);
+
         return notifications.stream().map(n -> {
             UserNotificationDTO senderDTO = null;
             if (n.getSender() != null) {
                 User s = n.getSender();
+                boolean isFollowing = followedSenderIds.contains(s.getId());
+
                 senderDTO = UserNotificationDTO.builder()
                         .id(s.getId())
                         .username(s.getUsername())
@@ -92,6 +110,7 @@ public class NotificationService {
                         .slug(s.getSlug())
                         .profileImg(s.getProfileImg())
                         .role(s.getRole() != null ? s.getRole().name() : null)
+                        .isFollowing(isFollowing)
                         .build();
             }
 

@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -12,5 +14,7 @@ public class UserNotificationDTO {
     private String surname;
     private String slug;
     private String profileImg;
+    @JsonProperty("isFollowing")
+    private boolean isFollowing;
     private String role;
 }
