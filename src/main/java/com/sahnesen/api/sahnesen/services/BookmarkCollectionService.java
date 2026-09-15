@@ -22,6 +22,7 @@ import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
+import com.sahnesen.api.sahnesen.util.SlugUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -40,14 +41,14 @@ public class BookmarkCollectionService {
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı: " + username));
     }
 
+    // Kullanıcının koleksiyonlarını ve içerik sayılarını döner
     @Transactional(readOnly = true)
     public List<BookmarkCollectionResponse> getUserCollections(String username) {
         List<BookmarkCollection> collections = collectionRepository.findByUser_Username(username);
 
         return collections.stream().map(col -> {
-            // Son eklenen 4 postu alıp PostPreviewDTO'ya dönüştürüyoruz
             List<PostPreviewDTO> previewContents = col.getBookmarks() != null ? col.getBookmarks().stream()
-                    .sorted((b1, b2) -> b2.getId().compareTo(b1.getId())) // En son eklenenler önce gelsin
+                    .sorted((b1, b2) -> b2.getId().compareTo(b1.getId()))
                     .limit(4)
                     .map(b -> new PostPreviewDTO(
                             b.getPost().getId(),
@@ -56,12 +57,17 @@ public class BookmarkCollectionService {
                     .toList()
                     : Collections.emptyList();
 
+            // İçerideki toplam post sayısını count ile alıyoruz
+            long totalItems = bookmarkRepository.countByCollectionId(col.getId());
+
             return new BookmarkCollectionResponse(
                     col.getId(),
                     col.getName(),
                     col.getDescription(),
+                    col.getSlug(),
                     col.isDefault(),
-                    previewContents);
+                    previewContents,
+                    totalItems); // DTO'ya itemCount eklendi
         }).toList();
     }
 
@@ -69,12 +75,39 @@ public class BookmarkCollectionService {
     public BookmarkCollection createCollection(String username, CreateCollectionRequest request) {
         User user = getUserByUsername(username);
 
+        // Slug üretiliyor
+        String slug = SlugUtil.generateSlug(request.name());
+
         BookmarkCollection collection = BookmarkCollection.builder()
                 .name(request.name())
                 .description(request.description())
+                .slug(slug) // Slug atanıyor
                 .user(user)
-                .isDefault(false) // Yeni oluşturulanlar varsayılan olmaz
+                .isDefault(false)
                 .build();
+
+        return collectionRepository.save(collection);
+    }
+
+    @Transactional
+    public BookmarkCollection updateCollection(String username, Long collectionId, CreateCollectionRequest request) {
+        BookmarkCollection collection = collectionRepository.findById(collectionId)
+                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
+
+        if (!collection.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu koleksiyonu düzenleme yetkiniz yok.");
+        }
+
+        if (collection.isDefault()) {
+            throw new RuntimeException("Varsayılan koleksiyonlar düzenlenemez.");
+        }
+
+        // İsim değiştiğinde slug'ı da güncelliyoruz
+        String newSlug = SlugUtil.generateSlug(request.name());
+
+        collection.setName(request.name());
+        collection.setDescription(request.description());
+        collection.setSlug(newSlug); // Slug güncelleniyor
 
         return collectionRepository.save(collection);
     }
@@ -113,42 +146,31 @@ public class BookmarkCollectionService {
         }
     }
 
+    // ID yerine slug ile getirme ve token/yetki kontrolü
     @Transactional(readOnly = true)
-    public Page<PostSummaryResponse> getPostsByCollectionId(String username, Long collectionId, PostType postType,
+    public Page<PostSummaryResponse> getPostsByCollectionSlug(String username, String slug, PostType postType,
             Pageable pageable) {
-        BookmarkCollection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
+        BookmarkCollection collection = collectionRepository.findByUser_UsernameAndSlug(username, slug)
+                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + slug));
 
-        // Güvenlik kontrolü
+        // Token sahibi kullanıcı dışındakiler erişemez (Zaten username Principal'dan
+        // geliyor)
         if (!collection.getUser().getUsername().equals(username)) {
             throw new RuntimeException("Bu koleksiyona erişim yetkiniz yok.");
         }
 
-        Page<PostBookmark> bookmarks = bookmarkRepository.findByCollectionIdAndPostType(collectionId, postType,
-                pageable);
+        Page<PostBookmark> bookmarks;
+
+        // Eğer postType seçilmemişse (null ise) sadece koleksiyona ait tüm
+        // bookmark'ları getir
+        if (postType == null) {
+            bookmarks = bookmarkRepository.findByCollectionId(collection.getId(), pageable);
+        } else {
+            // Seçilmişse tür filtreli getir
+            bookmarks = bookmarkRepository.findByCollectionIdAndPostType(collection.getId(), postType, pageable);
+        }
+
         return bookmarks.map(bookmark -> convertToSummaryResponse(bookmark.getPost()));
-    }
-
-    @Transactional
-    public BookmarkCollection updateCollection(String username, Long collectionId, CreateCollectionRequest request) {
-        BookmarkCollection collection = collectionRepository.findById(collectionId)
-                .orElseThrow(() -> new RuntimeException("Koleksiyon bulunamadı: " + collectionId));
-
-        // Güvenlik kontrolü
-        if (!collection.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("Bu koleksiyonu düzenleme yetkiniz yok.");
-        }
-
-        // Varsayılan koleksiyonların ismi değiştirilmek istenmeyebilir (İsteğe bağlı
-        // kural)
-        if (collection.isDefault()) {
-            throw new RuntimeException("Varsayılan koleksiyonlar düzenlenemez.");
-        }
-
-        collection.setName(request.name());
-        collection.setDescription(request.description());
-
-        return collectionRepository.save(collection);
     }
 
     @Transactional

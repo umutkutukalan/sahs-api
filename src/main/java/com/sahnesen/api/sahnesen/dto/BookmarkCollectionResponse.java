@@ -13,6 +13,8 @@ public class BookmarkCollectionResponse {
     private Long id;
     private String name;
     private String description;
+    private String slug;
     private boolean isDefault;
     private List<PostPreviewDTO> contents;
+    private long itemCount;
 }

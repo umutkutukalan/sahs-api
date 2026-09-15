@@ -15,5 +15,8 @@ public interface BookmarkCollectionRepository extends JpaRepository<BookmarkColl
     // Kullanıcının username'ine ve varsayılan durumuna göre koleksiyon bul
     Optional<BookmarkCollection> findByUser_UsernameAndIsDefaultTrue(String username);
 
+    // Token sahibi kullanıcının, kendi koleksiyon slug ile bulması için:
+    Optional<BookmarkCollection> findByUser_UsernameAndSlug(String username, String slug);
+
     long countByUser_Username(String username);
 }

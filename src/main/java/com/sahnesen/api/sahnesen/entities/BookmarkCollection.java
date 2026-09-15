@@ -25,6 +25,9 @@ public class BookmarkCollection {
 
     private String description;
 
+    @Column(nullable = false, unique = true)
+    private String slug;
+
     @Builder.Default
     private boolean isDefault = false; // Varsayılan "Kaydedilenler" klasörü mü?
 
