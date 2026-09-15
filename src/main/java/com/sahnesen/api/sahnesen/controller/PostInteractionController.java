@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
+import com.sahnesen.api.sahnesen.dto.UserStatsResponse;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
 import com.sahnesen.api.sahnesen.services.PostInteractionService;
 
@@ -74,4 +75,14 @@ public class PostInteractionController {
         }
         return ResponseEntity.ok(interactionService.getLikedPosts(principal.getName(), postType, pageable));
     }
+
+    @GetMapping("/stats")
+    public ResponseEntity<UserStatsResponse> getUserStats(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserStatsResponse stats = interactionService.getUserStats(principal.getName());
+        return ResponseEntity.ok(stats);
+    }
+
 }

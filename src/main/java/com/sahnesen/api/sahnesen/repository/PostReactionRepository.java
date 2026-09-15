@@ -35,4 +35,12 @@ public interface PostReactionRepository extends JpaRepository<PostReaction, Long
                         @Param("reactionType") ReactionType reactionType,
                         @Param("postType") PostType postType,
                         Pageable pageable);
+
+        // Belirli bir kullanıcının belirli bir reaksiyon türündeki (örn: LIKE) toplam
+        // sayısını döner
+        long countByUser_UsernameAndReactionType(String username, ReactionType reactionType);
+
+        // Eğer filtrelenmiş (postType kırılımlı) sayım istenirse:
+        long countByUser_UsernameAndReactionTypeAndPost_PostType(String username, ReactionType reactionType,
+                        PostType postType);
 }

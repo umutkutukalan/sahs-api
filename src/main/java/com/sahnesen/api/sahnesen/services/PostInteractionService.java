@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sahnesen.api.sahnesen.dto.PostInteractionStatusDTO;
 import com.sahnesen.api.sahnesen.dto.PostSummaryResponse;
+import com.sahnesen.api.sahnesen.dto.UserStatsResponse;
 import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.Post;
 import com.sahnesen.api.sahnesen.entities.PostBookmark;
@@ -201,5 +202,16 @@ public class PostInteractionService {
                                         author != null ? author.getUsername() : null,
                                         author != null ? author.getProfileImg() : null);
                 });
+        }
+
+        @Transactional(readOnly = true)
+        public UserStatsResponse getUserStats(String username) {
+                getUserByUsername(username);
+
+                long totalCollections = collectionRepository.countByUser_Username(username);
+                long totalLikedPosts = reactionRepository.countByUser_UsernameAndReactionType(username,
+                                ReactionType.LIKE);
+
+                return new UserStatsResponse(totalCollections, totalLikedPosts);
         }
 }
