@@ -94,13 +94,21 @@ public class PostService {
             finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
         }
 
-        // Süre hesaplama mantığı (Eğer DTO'dan gelmezse varsayılan 3 saat alınır)
-        int durationHours = (request.getDiscussionDurationHours() != null && request.getDiscussionDurationHours() > 0)
-                ? request.getDiscussionDurationHours()
-                : 3;
+        // 💡 SÜRESİZ / SÜRELİ MANTIĞI:
+        // durationHours = null -> Varsayılan 3 saat
+        // durationHours = 0 -> Süresiz (Sonsuz fuaye, endsAt = null)
+        // durationHours > 0 -> Belirtilen saat kadar (3, 12, 24 vb.)
+        LocalDateTime discussionEndsAt = null;
+        Integer durationHours = request.getDiscussionDurationHours();
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime endsAt = now.plusHours(durationHours);
+        if (durationHours != null && durationHours > 0) {
+            discussionEndsAt = LocalDateTime.now().plusHours(durationHours);
+        } else if (durationHours != null && durationHours == 0) {
+            discussionEndsAt = null; // Süresiz
+        } else {
+            durationHours = 3; // Varsayılan
+            discussionEndsAt = LocalDateTime.now().plusHours(3);
+        }
 
         // 3. Post nesnesini inşa et
         Post post = Post.builder()
@@ -114,7 +122,7 @@ public class PostService {
                 .tags(processAndGetTags(request.getTags()))
                 .isPublished(request.isPublished())
                 .discussionDurationHours(durationHours)
-                .discussionEndsAt(endsAt)
+                .discussionEndsAt(discussionEndsAt)
                 .build();
 
         Post savedPost = postRepository.save(post);
@@ -191,19 +199,13 @@ public class PostService {
             throw new RuntimeException("Bu yazıyı düzenleme yetkiniz yok");
         }
 
-        // 💡 MEDIUM SLUG MANTIĞI:
-        // Eğer yayınlama isteği geldiyse (isPublished = true) başlığa göre gerçek slug
-        // üretilir.
+        // MEDIUM SLUG MANTIĞI:
         if (request.isPublished()) {
-            // Yazı daha önce yayınlanmadıysa VEYA yayınlanmış ama başlığı değiştiyse:
             if (!post.isPublished() || !post.getTitle().equals(request.getTitle())) {
                 String newSlug = generateUniqueSlugForPost(request.getTitle(), post.getId());
                 post.setSlug(newSlug);
             }
         }
-        // NOT: isPublished false ise (Auto-save aşaması) post.setSlug() HİÇ BİR ŞEKİLDE
-        // ÇAĞRILMAZ!
-        // İlk atanan random hash (örn: 5f661044e2d6) olduğu gibi korunur.
 
         // Content Map'i String JSON'a dönüştür
         String jsonContentString;
@@ -224,17 +226,41 @@ public class PostService {
             finalSubtitle = tiptapContentExtractor.extractSubtitle(jsonContentString);
         }
 
-        // Süre güncellemesi
-        int durationHours = (request.getDiscussionDurationHours() != null && request.getDiscussionDurationHours() > 0)
-                ? request.getDiscussionDurationHours()
-                : (post.getDiscussionDurationHours() != null ? post.getDiscussionDurationHours() : 3);
+        // SÜRE VE BİTİŞ ZAMANI MANTIĞI
+        Integer reqDuration = request.getDiscussionDurationHours();
+        int durationHours;
+        LocalDateTime discussionEndsAt;
 
-        // Eğer yazı yeni yayınlanıyorsa veya süre değiştiyse bitiş zamanını yeniden
-        // hesapla
-        if (request.isPublished() && !post.isPublished()) {
-            post.setDiscussionEndsAt(LocalDateTime.now().plusHours(durationHours));
+        // Yazı ilk defa mı yayınlanıyor? (Taslak -> Yayınlandı)
+        boolean isNewlyPublished = !post.isPublished() && request.isPublished();
+
+        if (reqDuration != null && reqDuration == 0) {
+            durationHours = 0;
+            discussionEndsAt = null; // Süresiz (Sonsuz fuaye, endsAt = null)
+        } else if (reqDuration != null && reqDuration > 0) {
+            durationHours = reqDuration;
+
+            // Yeni yayınlanıyorsa, süre değiştirildiyse veya daha önce bitiş tarihi yoksa
+            // yeniden hesapla
+            if (isNewlyPublished || post.getDiscussionEndsAt() == null
+                    || !reqDuration.equals(post.getDiscussionDurationHours())) {
+                discussionEndsAt = LocalDateTime.now().plusHours(durationHours);
+            } else {
+                // Zaten yayındaysa ve süre değiştirilmediyse mevcut bitiş zamanını koru
+                discussionEndsAt = post.getDiscussionEndsAt();
+            }
+        } else {
+            // İstekten süre gelmediyse eskini koru, yoksa varsayılan 3 saat yap
+            durationHours = post.getDiscussionDurationHours() != null ? post.getDiscussionDurationHours() : 3;
+            if (durationHours == 0) {
+                discussionEndsAt = null;
+            } else {
+                discussionEndsAt = post.getDiscussionEndsAt() != null ? post.getDiscussionEndsAt()
+                        : LocalDateTime.now().plusHours(3);
+            }
         }
 
+        // Alanları Post nesnesine işle
         post.setTitle(request.getTitle());
         post.setSubtitle(finalSubtitle);
         post.setContent(jsonContentString);
@@ -243,6 +269,7 @@ public class PostService {
         post.setPublished(request.isPublished());
         post.setTags(processAndGetTags(request.getTags()));
         post.setDiscussionDurationHours(durationHours);
+        post.setDiscussionEndsAt(discussionEndsAt);
 
         Post savedPost = postRepository.save(post);
         return convertToResponse(savedPost);

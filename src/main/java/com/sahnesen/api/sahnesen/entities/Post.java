@@ -93,12 +93,12 @@ public class Post {
     private boolean isArchived = false;
 
     @Column(name = "view_count")
+    @Builder.Default
     private Long viewCount = 0L;
 
     // Fuaye / Tartışma süresi (Saat cinsinden, örn: 3, 12, 24 vb.)
     @Column(name = "discussion_duration_hours")
-    @Builder.Default
-    private Integer discussionDurationHours = 3; // Varsayılan olarak 3 saat belirleyebiliriz
+    private Integer discussionDurationHours;
 
     // Fuayenin kapanacağı kesin zaman (createdAt + discussionDurationHours)
     @Column(name = "discussion_ends_at")
