@@ -234,6 +234,11 @@ public class PostService {
         // Yazı ilk defa mı yayınlanıyor? (Taslak -> Yayınlandı)
         boolean isNewlyPublished = !post.isPublished() && request.isPublished();
 
+        if (isNewlyPublished) {
+            String newSlug = generateUniqueSlugForPost(request.getTitle(), post.getId());
+            post.setSlug(newSlug);
+        }
+
         if (reqDuration != null && reqDuration == 0) {
             durationHours = 0;
             discussionEndsAt = null; // Süresiz (Sonsuz fuaye, endsAt = null)
