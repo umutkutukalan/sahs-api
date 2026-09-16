@@ -408,6 +408,8 @@ public class PostService {
                 post.getCoverImage(),
                 post.getPostType(),
                 tagNames,
+                post.isPublished(),
+                post.isArchived(),
                 post.getCreatedAt(),
                 finalViewCount,
                 post.getDiscussionEndsAt(),

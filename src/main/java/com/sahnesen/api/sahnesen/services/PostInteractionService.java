@@ -193,6 +193,8 @@ public class PostInteractionService {
                                         post.getCoverImage(),
                                         post.getPostType(),
                                         tagNames,
+                                        post.isPublished(),
+                                        post.isArchived(),
                                         post.getCreatedAt(),
                                         post.getViewCount(),
                                         post.getDiscussionEndsAt(),
