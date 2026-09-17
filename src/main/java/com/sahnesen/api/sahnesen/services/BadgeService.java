@@ -29,6 +29,30 @@ public class BadgeService {
                                                            // template
 
     @Transactional
+    public void assignBadgeToUser(Long userId, BadgeType badgeType) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
+        UserMetrics metrics = user.getMetrics();
+
+        // Güvenlik: Eğer metrik nesnesi henüz oluşturulmamışsa (null ise) koruma sağla
+        if (metrics == null) {
+            metrics = new UserMetrics();
+            user.setMetrics(metrics);
+        }
+
+        Set<BadgeType> currentBadges = metrics.getBadges();
+
+        // Kullanıcıda bu rozet zaten yoksa ekle
+        if (!currentBadges.contains(badgeType)) {
+            currentBadges.add(badgeType);
+            userRepository.save(user);
+
+            log.info("Kullanıcı {} manuel/özel bir rozet kazandı: {}", user.getUsername(), badgeType.getDisplayName());
+            sendBadgeNotification(userId, badgeType);
+        }
+    }
+
+    @Transactional
     public void checkAndAssignBadges(Long userId, BadgeCategory category, int score) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
         UserMetrics metrics = user.getMetrics();

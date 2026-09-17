@@ -13,6 +13,7 @@ import com.sahnesen.api.sahnesen.dto.UserDTO;
 import com.sahnesen.api.sahnesen.entities.InviteCode;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
+import com.sahnesen.api.sahnesen.enums.BadgeType;
 import com.sahnesen.api.sahnesen.enums.ThemeType;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.request.UserLoginRequest;
@@ -27,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final BadgeService badgeService;
     private final UserRepository userRepository;
     private final InviteCodeService inviteCodeService;
     private final PasswordEncoder passwordEncoder;
@@ -73,10 +75,7 @@ public class UserService {
 
     @Transactional
     public AuthResponse register(UserRegisterRequest request) {
-        // 1. Davet Kodu Doğrulaması (KOD GEÇERSİZDİRSE İŞLEM BURADA PATLAR VE
-        // İLERLEMEZ)
-        // Bu işlem kodun usedCount değerini 1 artırır ve güncellenmiş InviteCode'u
-        // döner.
+        // 1. Davet Kodu Doğrulaması
         InviteCode usedCode = inviteCodeService.validateAndUseCode(request.getInviteCode());
 
         // 2. Güvenlik Kontrolleri
@@ -102,11 +101,21 @@ public class UserService {
         // 4. Veritabanına Yazma
         User savedUser = userRepository.save(user);
 
-        // 5. Entity -> DTO Dönüşümü
+        // --- 5. İLK KONTENJAN (KURUCU SAHNE) KONTROLÜ ---
+        long totalUsers = userRepository.count();
+        int founderLimit = 15; // İleride bu limiti artırabilirsin
+
+        if (totalUsers <= founderLimit) {
+            // Yazdığımız yeni metot ile Kurucu rozetini ve bildirimini tetikle
+            badgeService.assignBadgeToUser(savedUser.getId(), BadgeType.FOUNDER);
+        }
+        // ------------------------------------------------
+
+        // 6. Entity -> DTO Dönüşümü
         UserDTO userDto = convertToDto(savedUser);
 
-        // 6. Token Üretimi ve Yanıt İnsası
-        String token = jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole().name());
+        // 7. Token Üretimi ve Yanıt İnsası
+        String token = jwtUtil.generateToken(savedUser.getId(), savedUser.getUsername(), savedUser.getRole().name());
 
         return AuthResponse.builder()
                 .user(userDto)
@@ -127,7 +136,7 @@ public class UserService {
         }
 
         // 3. Token üretimi
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole().name());
 
         // 4. UserDTO'ya dönüştür ve Response oluştur
         UserDTO userDTO = convertToDto(user);
