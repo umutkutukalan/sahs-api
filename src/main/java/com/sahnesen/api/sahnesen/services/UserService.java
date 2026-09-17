@@ -172,10 +172,12 @@ public class UserService {
             user.setBio(request.getBio());
         if (request.getMotto() != null)
             user.setMotto(request.getMotto());
+
         if (request.getProfileImg() != null)
             user.setProfileImg(request.getProfileImg());
         if (request.getCoverImg() != null)
             user.setCoverImg(request.getCoverImg());
+
         if (request.getCity() != null)
             user.setCity(request.getCity());
         if (request.getDistrict() != null)
@@ -260,6 +262,28 @@ public class UserService {
                 .stream()
                 .map(this::convertToPublicUserDTO) // Varsa mevcut dönüştürücü metodun, yoksa manuel mapping
                 .toList();
+    }
+
+    @Transactional
+    public void removeProfileImg(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        if (user.getProfileImg() != null) {
+            fileStorageService.deleteFile(user.getProfileImg());
+            user.setProfileImg(null);
+            userRepository.save(user);
+        }
+    }
+
+    @Transactional
+    public void removeCoverImg(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        if (user.getCoverImg() != null) {
+            fileStorageService.deleteFile(user.getCoverImg());
+            user.setCoverImg(null);
+            userRepository.save(user);
+        }
     }
 
     private PublicUserDTO convertToPublicUserDTO(User user) {

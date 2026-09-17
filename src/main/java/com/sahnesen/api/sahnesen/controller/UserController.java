@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -96,5 +97,17 @@ public class UserController {
     @GetMapping("/search")
     public ResponseEntity<List<PublicUserDTO>> searchUsers(@RequestParam("query") String query) {
         return ResponseEntity.ok(userService.searchUsers(query));
+    }
+
+    @DeleteMapping("/me/profile-image")
+    public ResponseEntity<Void> removeProfileImage(Principal principal) {
+        userService.removeProfileImg(principal.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/me/cover-image")
+    public ResponseEntity<Void> removeCoverImage(Principal principal) {
+        userService.removeCoverImg(principal.getName());
+        return ResponseEntity.ok().build();
     }
 }
