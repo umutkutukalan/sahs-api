@@ -146,8 +146,10 @@ public class UserService {
                 .email(user.getEmail())
                 .name(user.getName())
                 .surname(user.getSurname())
+                .bio(user.getBio())
                 .slug(user.getSlug())
                 .profileImg(user.getProfileImg())
+                .coverImg(user.getCoverImg())
                 .role(user.getRole().name()) // Role Enum ise .name() ile String'e çeviriyoruz
                 .build();
     }

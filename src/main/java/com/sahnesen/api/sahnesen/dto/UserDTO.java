@@ -11,6 +11,7 @@ public class UserDTO {
     private String email;
     private String name;
     private String surname;
+    private String bio;
     private String slug;
     private String profileImg;
     private String coverImg;
