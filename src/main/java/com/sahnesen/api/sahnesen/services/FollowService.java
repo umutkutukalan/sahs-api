@@ -72,7 +72,7 @@ public class FollowService {
                     following.getId(),
                     follower.getId(),
                     "Yeni Takipçi",
-                    follower.getName() + " " + follower.getSurname() + " seni takip etmeye başladı.",
+                    "seni takip etmeye başladı.",
                     NotificationType.FOLLOW,
                     "/profil/" + follower.getUsername());
         } catch (Exception e) {
