@@ -66,6 +66,7 @@ public class UserService {
                 .city(user.getCity())
                 .district(user.getDistrict())
                 .role(user.getRole().name())
+                .metrics(user.getMetrics())
                 .build();
     }
 
@@ -152,6 +153,10 @@ public class UserService {
 
     // Manuel Entity -> DTO dönüşüm metodu
     private UserDTO convertToDto(User user) {
+        System.out.println("DEBUG METRICS: " + user.getMetrics()); // Burası ne basıyor?
+        if (user.getMetrics() != null) {
+            System.out.println("DEBUG BADGES: " + user.getMetrics().getBadges());
+        }
         return UserDTO.builder()
                 .id(user.getId())
                 .username(user.getUsername())
