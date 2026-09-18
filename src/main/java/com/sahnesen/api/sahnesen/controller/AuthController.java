@@ -4,8 +4,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sahnesen.api.sahnesen.request.ResetPasswordRequest;
 import com.sahnesen.api.sahnesen.request.UserLoginRequest;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
 import com.sahnesen.api.sahnesen.response.AuthResponse;
@@ -81,6 +83,23 @@ public class AuthController {
         loginResponse.setToken(null);
 
         return ResponseEntity.ok(loginResponse);
+    }
+
+    // 1. Şifre sıfırlama maili gönderme isteği
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestParam String email) {
+        if (email == null || email.isBlank()) {
+            return ResponseEntity.badRequest().body("E-posta adresi boş olamaz.");
+        }
+        userService.forgotPassword(email);
+        return ResponseEntity.ok("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi.");
+    }
+
+    // 2. Token ve yeni şifre ile şifreyi yenileme
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        userService.resetPassword(request.getToken(), request.getNewPassword());
+        return ResponseEntity.ok("Şifreniz başarıyla güncellendi.");
     }
 
 }

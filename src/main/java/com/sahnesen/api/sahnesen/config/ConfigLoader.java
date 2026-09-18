@@ -12,5 +12,7 @@ public class ConfigLoader {
         System.setProperty("GOOGLE_CLIENT_SECRET", dotenv.get("GOOGLE_CLIENT_SECRET"));
         System.setProperty("GOOGLE_REDIRECT_URI", dotenv.get("GOOGLE_REDIRECT_URI"));
         System.setProperty("JWT_SECRET", dotenv.get("JWT_SECRET"));
+        System.setProperty("MAIL_USERNAME", dotenv.get("MAIL_USERNAME"));
+        System.setProperty("MAIL_PASSWORD", dotenv.get("MAIL_PASSWORD"));
     }
 }

@@ -35,12 +35,14 @@ public class SecurityConfig {
                                 .csrf(csrf -> csrf.disable())
                                 .authorizeHttpRequests(auth -> auth
 
+                                                .requestMatchers("/api/auth/**")
+                                                .permitAll()
+
                                                 // 🔓 AUTH & USER
                                                 .requestMatchers(
                                                                 "/users/login",
                                                                 "/users/register",
                                                                 "/users/me", // 👈 KRİTİK
-                                                                "/auth/**",
                                                                 "/oauth2/**",
                                                                 "/ws-sahnesen/**")
                                                 .permitAll()

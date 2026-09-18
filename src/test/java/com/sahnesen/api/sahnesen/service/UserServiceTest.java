@@ -3,6 +3,7 @@ package com.sahnesen.api.sahnesen.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,7 +67,7 @@ public class UserServiceTest {
                 .build();
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
 
-        when(jwtUtil.generateToken(anyString(), anyString())).thenReturn("mocked_token");
+        when(jwtUtil.generateToken(anyLong(), anyString(), anyString())).thenReturn("mocked_token");
 
         // WHEN (AKSIYON)
         AuthResponse response = userService.register(request);

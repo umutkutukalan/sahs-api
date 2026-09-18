@@ -1,7 +1,9 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
     private final FileStorageService fileStorageService;
+    private final EmailService emailService;
 
     @Transactional(readOnly = true)
     public UserDTO getMyProfileDetails(String usernameOrEmail) {
@@ -297,6 +300,42 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public void forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Bu e-posta adresine kayıtlı bir kullanıcı bulunamadı."));
+
+        // Güvenli, rastgele benzersiz bir token üret (UUID veya SecureRandom)
+        String token = UUID.randomUUID().toString();
+
+        user.setResetPasswordToken(token);
+        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15)); // 15 dakika geçerli
+        userRepository.save(user);
+
+        // E-postayı gönder
+        emailService.sendPasswordResetEmail(user.getEmail(), token);
+    }
+
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        User user = userRepository.findByResetPasswordToken(token)
+                .orElseThrow(() -> new RuntimeException("Geçersiz veya süresi dolmuş şifre sıfırlama bağlantısı."));
+
+        // Süre kontrolü
+        if (user.getResetPasswordTokenExpiry().isBefore(LocalDateTime.now())) {
+            throw new RuntimeException("Şifre sıfırlama bağlantısının süresi dolmuş.");
+        }
+
+        // Yeni şifreyi encode et ve kaydet
+        user.setPassword(passwordEncoder.encode(newPassword));
+
+        // Token'ı sıfırla (tek kullanımlık olsun)
+        user.setResetPasswordToken(null);
+        user.setResetPasswordTokenExpiry(null);
+
+        userRepository.save(user);
+    }
+
     private PublicUserDTO convertToPublicUserDTO(User user) {
         return PublicUserDTO.builder()
                 .id(user.getId())
@@ -312,4 +351,5 @@ public class UserService {
                 .role(user.getRole() != null ? user.getRole().name() : null)
                 .build();
     }
+
 }
