@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.dto;
 
+import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,4 +24,5 @@ public class PublicUserDTO {
     private String city;
     private String district;
     private String role;
+    private UserMetrics metrics;
 }

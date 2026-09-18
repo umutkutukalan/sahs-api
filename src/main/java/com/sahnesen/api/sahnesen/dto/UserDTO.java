@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.dto;
 
+import com.sahnesen.api.sahnesen.entities.model.UserMetrics;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,4 +18,5 @@ public class UserDTO {
     private String profileImg;
     private String coverImg;
     private String role;
+    private UserMetrics metrics;
 }

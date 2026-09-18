@@ -163,6 +163,7 @@ public class UserService {
                 .profileImg(user.getProfileImg())
                 .coverImg(user.getCoverImg())
                 .role(user.getRole().name()) // Role Enum ise .name() ile String'e çeviriyoruz
+                .metrics(user.getMetrics())
                 .build();
     }
 
@@ -349,6 +350,7 @@ public class UserService {
                 .city(user.getCity())
                 .district(user.getDistrict())
                 .role(user.getRole() != null ? user.getRole().name() : null)
+                .metrics(user.getMetrics())
                 .build();
     }
 
