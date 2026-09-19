@@ -12,11 +12,13 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sahnesen.api.sahnesen.dto.PublicUserDTO;
 import com.sahnesen.api.sahnesen.dto.UserDTO;
+import com.sahnesen.api.sahnesen.entities.BookmarkCollection;
 import com.sahnesen.api.sahnesen.entities.InviteCode;
 import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.AccountStatus;
 import com.sahnesen.api.sahnesen.enums.BadgeType;
 import com.sahnesen.api.sahnesen.enums.ThemeType;
+import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 import com.sahnesen.api.sahnesen.request.UserLoginRequest;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
@@ -32,6 +34,7 @@ public class UserService {
 
     private final BadgeService badgeService;
     private final UserRepository userRepository;
+    private final BookmarkCollectionRepository bookmarkCollectionRepository;
     private final InviteCodeService inviteCodeService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
@@ -143,6 +146,71 @@ public class UserService {
         String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole().name());
 
         // 4. UserDTO'ya dönüştür ve Response oluştur
+        UserDTO userDTO = convertToDto(user);
+
+        return AuthResponse.builder()
+                .user(userDTO)
+                .token(token)
+                .build();
+    }
+
+    @Transactional
+    public AuthResponse processGoogleLogin(String googleId, String email, String name, String surname, String picture) {
+        User user = userRepository.findByGoogleId(googleId)
+                .orElseGet(() -> {
+                    // Eğer googleId ile bulunamadıysa, belki daha önce aynı email ile normal kayıt
+                    // olmuştur
+                    return userRepository.findByEmail(email)
+                            .map(existingUser -> {
+                                existingUser.setGoogleId(googleId);
+                                if (existingUser.getProfileImg() == null && picture != null) {
+                                    existingUser.setProfileImg(picture);
+                                }
+                                return userRepository.save(existingUser);
+                            })
+                            .orElseGet(() -> {
+                                // Tamamen yeni kullanıcı oluştur
+                                String baseUsername = email.split("@")[0].toLowerCase().replaceAll("[^a-z0-9]", "");
+                                String username = baseUsername;
+                                int counter = 1;
+                                while (userRepository.existsByUsername(username)) {
+                                    username = baseUsername + counter++;
+                                }
+
+                                User newUser = User.builder()
+                                        .googleId(googleId)
+                                        .email(email)
+                                        .name(name != null ? name : "Kullanıcı")
+                                        .surname(surname != null ? surname : "")
+                                        .username(username)
+                                        .slug(username)
+                                        .password(passwordEncoder.encode(UUID.randomUUID().toString())) // Rastgele
+                                                                                                        // şifre
+                                        .accountStatus(AccountStatus.ACTIVE)
+                                        .profileImg(picture)
+                                        .build();
+
+                                User saved = userRepository.save(newUser);
+
+                                // --- YENİ EKLENEN KISIM: Varsayılan Koleksiyon Oluşturma ---
+                                BookmarkCollection defaultCollection = BookmarkCollection.builder()
+                                        .name("Favoriler") // Veya projenin varsayılan isimlendirmesi neyse
+                                        .isDefault(true)
+                                        .user(saved)
+                                        .build();
+                                bookmarkCollectionRepository.save(defaultCollection);
+                                // -----------------------------------------------------------
+
+                                // Kurucu rozeti kontrolü
+                                if (userRepository.count() <= 15) {
+                                    badgeService.assignBadgeToUser(saved.getId(), BadgeType.FOUNDER);
+                                }
+
+                                return saved;
+                            });
+                });
+
+        String token = jwtUtil.generateToken(user.getId(), user.getUsername(), user.getRole().name());
         UserDTO userDTO = convertToDto(user);
 
         return AuthResponse.builder()

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sahnesen.api.sahnesen.request.GoogleLoginRequest;
 import com.sahnesen.api.sahnesen.request.ResetPasswordRequest;
 import com.sahnesen.api.sahnesen.request.UserLoginRequest;
 import com.sahnesen.api.sahnesen.request.UserRegisterRequest;
@@ -83,6 +84,29 @@ public class AuthController {
         loginResponse.setToken(null);
 
         return ResponseEntity.ok(loginResponse);
+    }
+
+    // Google ID Token doğrulama veya doğrudan client-side flow için endpoint
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> googleLogin(@RequestBody GoogleLoginRequest request,
+            HttpServletResponse response) {
+
+        // 1. Servis üzerinden kullanıcıyı oluştur/giriş yap ve token'ı al
+        AuthResponse googleResponse = userService.processGoogleLogin(
+                request.getGoogleId(),
+                request.getEmail(),
+                request.getName(),
+                request.getSurname(),
+                request.getPicture());
+
+        // 2. 🔐 Güvenli JWT Cookie oluşturma metodunu çağır (Normal giriş/kayıt ile
+        // aynı mantık)
+        setSecureJwtCookie(response, googleResponse.getToken());
+
+        // 3. Güvenlik için token'ı body'den temizliyoruz, sadece Cookie'de kalıyor.
+        googleResponse.setToken(null);
+
+        return ResponseEntity.ok(googleResponse);
     }
 
     // 1. Şifre sıfırlama maili gönderme isteği
