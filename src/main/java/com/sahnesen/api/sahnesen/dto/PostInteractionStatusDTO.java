@@ -15,6 +15,8 @@ public class PostInteractionStatusDTO {
     private boolean isShined;
     @JsonProperty("isBookmarked")
     private boolean isBookmarked;
+    @JsonProperty("isReported")
+    private boolean isReported;
     private long likeCount;
     private long shineCount;
 }

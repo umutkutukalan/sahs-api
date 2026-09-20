@@ -24,7 +24,8 @@ public class ReportService {
         User reporter = userRepository.findByUsername(currentUsername)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı."));
 
-        // 2. Aynı kullanıcı aynı içeriği tekrar raporlamış mı kontrol et (Spam önleme)
+        // 2. Aynı kullanıcı aynı içeriği daha önce raporlamış mı kontrol et (Spam
+        // önleme)
         boolean alreadyReported = reportRepository.existsByReporterAndTargetIdAndReportType(
                 reporter, request.getTargetId(), request.getReportType());
 

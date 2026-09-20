@@ -21,10 +21,12 @@ import com.sahnesen.api.sahnesen.entities.User;
 import com.sahnesen.api.sahnesen.enums.NotificationType;
 import com.sahnesen.api.sahnesen.enums.PostType;
 import com.sahnesen.api.sahnesen.enums.ReactionType;
+import com.sahnesen.api.sahnesen.enums.ReportType;
 import com.sahnesen.api.sahnesen.repository.BookmarkCollectionRepository;
 import com.sahnesen.api.sahnesen.repository.PostBookmarkRepository;
 import com.sahnesen.api.sahnesen.repository.PostReactionRepository;
 import com.sahnesen.api.sahnesen.repository.PostRepository;
+import com.sahnesen.api.sahnesen.repository.ReportRepository;
 import com.sahnesen.api.sahnesen.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -40,6 +42,7 @@ public class PostInteractionService {
         private final BookmarkCollectionRepository collectionRepository;
         private final PostRepository postRepository;
         private final UserRepository userRepository;
+        private final ReportRepository reportRepository;
         private final NotificationService notificationService;
 
         private User getUserByUsername(String usernameOrEmail) {
@@ -144,7 +147,8 @@ public class PostInteractionService {
         public PostInteractionStatusDTO getInteractionStatus(String username, Long postId,
                         ReactionType targetShineType) {
                 // Kullanıcının varlığını doğrula
-                getUserByUsername(username);
+
+                User user = getUserByUsername(username);
 
                 boolean isLiked = reactionRepository.existsByUser_UsernameAndPostIdAndReactionType(
                                 username, postId, ReactionType.LIKE);
@@ -155,6 +159,9 @@ public class PostInteractionService {
 
                 boolean isBookmarked = bookmarkRepository.existsByCollection_User_UsernameAndPostId(username, postId);
 
+                boolean isReported = reportRepository.existsByReporterAndTargetIdAndReportType(
+                                user, postId, ReportType.POST);
+
                 long likeCount = reactionRepository.countByPostIdAndReactionType(postId, ReactionType.LIKE);
                 long shineCount = reactionRepository.countByPostIdAndReactionType(postId, targetShineType);
 
@@ -162,6 +169,7 @@ public class PostInteractionService {
                                 .isLiked(isLiked)
                                 .isShined(isShined)
                                 .isBookmarked(isBookmarked)
+                                .isReported(isReported)
                                 .likeCount(likeCount)
                                 .shineCount(shineCount)
                                 .build();
