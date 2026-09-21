@@ -200,12 +200,12 @@ public class PostService {
         }
 
         // MEDIUM SLUG MANTIĞI:
-        if (request.isPublished()) {
-            if (!post.isPublished() || !post.getTitle().equals(request.getTitle())) {
-                String newSlug = generateUniqueSlugForPost(request.getTitle(), post.getId());
-                post.setSlug(newSlug);
-            }
-        }
+        // if (request.isPublished()) {
+        // if (!post.isPublished() || !post.getTitle().equals(request.getTitle())) {
+        // String newSlug = generateUniqueSlugForPost(request.getTitle(), post.getId());
+        // post.setSlug(newSlug);
+        // }
+        // }
 
         // Content Map'i String JSON'a dönüştür
         String jsonContentString;
