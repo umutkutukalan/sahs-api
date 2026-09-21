@@ -83,9 +83,12 @@ public class PostService {
         }
 
         // 1. Cover Image belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
-        String finalCoverImage = request.getCoverImage();
-        if (finalCoverImage == null || finalCoverImage.isBlank()) {
-            finalCoverImage = tiptapContentExtractor.extractFirstImage(jsonContentString);
+        List<String> finalCoverImages = request.getCoverImages();
+        if (finalCoverImages == null || finalCoverImages.isEmpty()) {
+            List<String> allImages = tiptapContentExtractor.extractAllImages(jsonContentString);
+            if (allImages != null && !allImages.isEmpty()) {
+                finalCoverImages = allImages;
+            }
         }
 
         // 2. Subtitle belirleme (DTO'da yoksa Tiptap JSON'dan çıkar)
@@ -117,7 +120,7 @@ public class PostService {
                 .subtitle(finalSubtitle)
                 .slug(slug)
                 .content(jsonContentString)
-                .coverImage(finalCoverImage)
+                .coverImages(finalCoverImages)
                 .user(user)
                 .tags(processAndGetTags(request.getTags()))
                 .isPublished(request.isPublished())
@@ -216,9 +219,12 @@ public class PostService {
         }
 
         // Cover Image & Subtitle belirleme
-        String finalCoverImage = request.getCoverImage();
-        if (finalCoverImage == null || finalCoverImage.isBlank()) {
-            finalCoverImage = tiptapContentExtractor.extractFirstImage(jsonContentString);
+        List<String> finalCoverImages = request.getCoverImages();
+        if (finalCoverImages == null || finalCoverImages.isEmpty()) {
+            List<String> allImages = tiptapContentExtractor.extractAllImages(jsonContentString);
+            if (allImages != null && !allImages.isEmpty()) {
+                finalCoverImages = allImages;
+            }
         }
 
         String finalSubtitle = request.getSubtitle();
@@ -269,7 +275,7 @@ public class PostService {
         post.setTitle(request.getTitle());
         post.setSubtitle(finalSubtitle);
         post.setContent(jsonContentString);
-        post.setCoverImage(finalCoverImage);
+        post.setCoverImages(finalCoverImages);
         post.setPostType(request.getPostType());
         post.setPublished(request.isPublished());
         post.setTags(processAndGetTags(request.getTags()));
@@ -405,7 +411,7 @@ public class PostService {
                 post.getTitle(),
                 post.getSubtitle(),
                 post.getSlug(),
-                post.getCoverImage(),
+                post.getCoverImages(),
                 post.getPostType(),
                 tagNames,
                 post.isPublished(),
@@ -442,7 +448,7 @@ public class PostService {
                 .subtitle(post.getSubtitle())
                 .slug(post.getSlug())
                 .content(post.getContent())
-                .coverImage(post.getCoverImage())
+                .coverImages(post.getCoverImages())
                 .postType(post.getPostType())
                 .tags(tagNames)
                 .isPublished(post.isPublished())

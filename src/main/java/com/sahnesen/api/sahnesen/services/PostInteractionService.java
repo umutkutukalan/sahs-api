@@ -198,7 +198,7 @@ public class PostInteractionService {
                                         post.getTitle(),
                                         post.getSubtitle(),
                                         post.getSlug(),
-                                        post.getCoverImage(),
+                                        post.getCoverImages(),
                                         post.getPostType(),
                                         tagNames,
                                         post.isPublished(),

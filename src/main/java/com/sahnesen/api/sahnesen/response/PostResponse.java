@@ -26,7 +26,7 @@ public class PostResponse implements Serializable {
     private String subtitle;
     private String slug;
     private String content;
-    private String coverImage;
+    private List<String> coverImages;
     private PostType postType;
 
     private List<String> tags;

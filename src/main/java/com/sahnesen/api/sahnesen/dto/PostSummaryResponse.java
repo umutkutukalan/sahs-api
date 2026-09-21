@@ -11,7 +11,7 @@ public record PostSummaryResponse(
                 String title,
                 String subtitle,
                 String slug,
-                String coverImage,
+                List<String> coverImages,
                 PostType postType,
                 List<String> tags,
                 @JsonProperty("isPublished") boolean isPublished,

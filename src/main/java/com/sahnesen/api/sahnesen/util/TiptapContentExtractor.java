@@ -1,5 +1,7 @@
 package com.sahnesen.api.sahnesen.util;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,29 +12,29 @@ public class TiptapContentExtractor {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    // 1. İlk Görseli Bulma (coverImage)
-    public String extractFirstImage(String tiptapJson) {
-        if (tiptapJson == null || tiptapJson.isBlank())
+    // 1. Tüm Görselleri Bulma (coverImage)
+    public List<String> extractAllImages(String jsonContentString) {
+        if (jsonContentString == null || jsonContentString.isBlank())
             return null;
         try {
-            JsonNode root = objectMapper.readTree(tiptapJson);
-            return findFirstImageUrl(root);
+            JsonNode root = objectMapper.readTree(jsonContentString);
+            return findAllImagesUrls(root);
         } catch (Exception e) {
             return null;
         }
     }
 
-    private String findFirstImageUrl(JsonNode node) {
+    private List<String> findAllImagesUrls(JsonNode node) {
         if (node.has("type") && node.get("type").asText().equals("image")) {
             if (node.has("attrs") && node.get("attrs").has("src")) {
-                return node.get("attrs").get("src").asText();
+                return List.of(node.get("attrs").get("src").asText());
             }
         }
         if (node.has("content") && node.get("content").isArray()) {
             for (JsonNode child : node.get("content")) {
-                String url = findFirstImageUrl(child);
-                if (url != null)
-                    return url;
+                List<String> urls = findAllImagesUrls(child);
+                if (urls != null)
+                    return urls;
             }
         }
         return null;

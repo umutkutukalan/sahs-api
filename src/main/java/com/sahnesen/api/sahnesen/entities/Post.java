@@ -61,7 +61,8 @@ public class Post {
     @Column(columnDefinition = "LONGTEXT")
     private String content; // Tiptap'tan gelecek JSON String
 
-    private String coverImage; // Görsel URL'i
+    @Column(name = "cover_images")
+    private List<String> coverImages; // Görsel URL'leri
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

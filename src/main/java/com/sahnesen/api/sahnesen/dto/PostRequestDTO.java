@@ -27,7 +27,7 @@ public class PostRequestDTO {
     @NotNull(message = "İçerik boş olamaz.")
     private Map<String, Object> content; // Tiptap JSON String
 
-    private String coverImage; // Opsiyonel Kapak Fotoğrafı URL'i
+    private List<String> coverImages; // Opsiyonel Kapak Fotoğrafı URL'i
 
     // Yazara ait etiketler (Örn: ["sinirbilim", "felsefe"])
     @Size(max = 5, message = "En fazla 5 etiket ekleyebilirsiniz.")
