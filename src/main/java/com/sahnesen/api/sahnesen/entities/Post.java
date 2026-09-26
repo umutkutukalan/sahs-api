@@ -45,6 +45,11 @@ public class Post {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // Dışarıya açık, hiç değişmeyen tanımlayıcı.
+    // URL'lerde (editör linki, /me/{publicId} gibi) hep bu kullanılacak.
+    @Column(nullable = false, unique = true, updatable = false, length = 12)
+    private String publicId;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PostType postType;

@@ -15,6 +15,10 @@ import com.sahnesen.api.sahnesen.enums.PostType;
 
 public interface PostRepository extends JpaRepository<Post, Long> {
 
+        Optional<Post> findByPublicId(String publicId);
+
+        boolean existsByPublicId(String publicId);
+
         // 1. Yayınlanmış tüm yazılar (Ana Sayfa Akışı)
         Page<Post> findAllByIsPublishedTrue(Pageable pageable);
 

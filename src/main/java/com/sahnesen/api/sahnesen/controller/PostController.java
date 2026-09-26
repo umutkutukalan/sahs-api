@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -71,12 +72,20 @@ public class PostController {
         return ResponseEntity.ok(postService.getMyPostCounts(principal.getName(), postType));
     }
 
-    @PutMapping("/me/{postId}")
+    @GetMapping("/me/{publicId}")
+    public ResponseEntity<PostResponse> getMyPostByPublicId(
+            @PathVariable String publicId,
+            Authentication authentication) {
+        return ResponseEntity.ok(
+                postService.getPostByPublicIdForOwner(authentication.getName(), publicId));
+    }
+
+    @PutMapping("/me/{publicId}")
     public ResponseEntity<PostResponse> updateMyPost(
-            @PathVariable Long postId,
+            @PathVariable String publicId,
             @Valid @RequestBody PostRequestDTO request,
             Principal principal) {
-        PostResponse updatedPost = postService.updatePost(principal.getName(), postId, request);
+        PostResponse updatedPost = postService.updatePost(principal.getName(), publicId, request);
         return ResponseEntity.ok(updatedPost);
     }
 

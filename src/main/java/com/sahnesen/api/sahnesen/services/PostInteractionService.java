@@ -195,6 +195,7 @@ public class PostInteractionService {
 
                         return new PostSummaryResponse(
                                         post.getId(),
+                                        post.getPublicId(),
                                         post.getTitle(),
                                         post.getSubtitle(),
                                         post.getSlug(),

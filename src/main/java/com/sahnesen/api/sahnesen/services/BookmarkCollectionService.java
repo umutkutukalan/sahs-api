@@ -198,6 +198,7 @@ public class BookmarkCollectionService {
 
         return new PostSummaryResponse(
                 post.getId(),
+                post.getPublicId(),
                 post.getTitle(),
                 post.getSubtitle(),
                 post.getSlug(),

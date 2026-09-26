@@ -8,6 +8,7 @@ import com.sahnesen.api.sahnesen.enums.PostType;
 
 public record PostSummaryResponse(
                 Long id,
+                String publicId,
                 String title,
                 String subtitle,
                 String slug,

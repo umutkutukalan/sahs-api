@@ -59,6 +59,14 @@ public class PostService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private String generateUniquePublicId() {
+        String candidate;
+        do {
+            candidate = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+        } while (postRepository.existsByPublicId(candidate));
+        return candidate;
+    }
+
     public PostResponse createPost(String username, PostRequestDTO request) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
@@ -68,11 +76,12 @@ public class PostService {
         // slug üret.
         // Taslak olarak oluşturuluyorsa (isPublished = false) rastgele benzersiz bir
         // hash ata.
+
         String slug;
         if (request.isPublished()) {
             slug = generateUniqueSlugForPost(request.getTitle(), null);
         } else {
-            slug = UUID.randomUUID().toString().replace("-", "").substring(0, 12);
+            slug = generateUniquePublicId(); // taslakken slug=publicId ile aynı olabilir, sorun değil
         }
 
         String jsonContentString;
@@ -115,6 +124,7 @@ public class PostService {
 
         // 3. Post nesnesini inşa et
         Post post = Post.builder()
+                .publicId(generateUniquePublicId())
                 .postType(request.getPostType())
                 .title(request.getTitle())
                 .subtitle(finalSubtitle)
@@ -194,8 +204,8 @@ public class PostService {
 
     @Transactional
     @CacheEvict(value = "postBySlug", key = "#result.slug", condition = "#result != null && #result.isPublished()")
-    public PostResponse updatePost(String username, Long postId, PostRequestDTO request) {
-        Post post = postRepository.findById(postId)
+    public PostResponse updatePost(String username, String publicId, PostRequestDTO request) {
+        Post post = postRepository.findByPublicId(publicId)
                 .orElseThrow(() -> new RuntimeException("Post bulunamadı"));
 
         if (!post.getUser().getUsername().equals(username)) {
@@ -333,6 +343,18 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    public PostResponse getPostByPublicIdForOwner(String username, String publicId) {
+        Post post = postRepository.findByPublicId(publicId)
+                .orElseThrow(() -> new RuntimeException("Yazı bulunamadı."));
+
+        if (!post.getUser().getUsername().equals(username)) {
+            throw new RuntimeException("Bu yazıyı görüntüleme yetkiniz yok.");
+        }
+
+        return convertToResponse(post);
+    }
+
+    @Transactional(readOnly = true)
     @Cacheable(value = "postBySlug", key = "#slug", condition = "#currentUsername == null", // Sadece anonim/genel okuma
                                                                                             // isteklerini cache'le
             unless = "#result == null || !#result.isPublished" // Taslak olan veya null dönen yanıtları ASLA cache'leme
@@ -408,6 +430,7 @@ public class PostService {
 
         return new PostSummaryResponse(
                 post.getId(),
+                post.getPublicId(),
                 post.getTitle(),
                 post.getSubtitle(),
                 post.getSlug(),
@@ -444,6 +467,7 @@ public class PostService {
 
         return PostResponse.builder()
                 .id(post.getId())
+                .publicId(post.getPublicId())
                 .title(post.getTitle())
                 .subtitle(post.getSubtitle())
                 .slug(post.getSlug())
