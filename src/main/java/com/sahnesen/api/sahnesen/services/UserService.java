@@ -1,10 +1,13 @@
 package com.sahnesen.api.sahnesen.services;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,9 @@ public class UserService {
 
     private final FileStorageService fileStorageService;
     private final EmailService emailService;
+
+    @Autowired
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Transactional(readOnly = true)
     public UserDTO getMyProfileDetails(String usernameOrEmail) {
@@ -376,18 +382,31 @@ public class UserService {
 
     @Transactional
     public void forgotPassword(String email) {
+        // Redis için benzersiz bir key oluşturuyoruz (Örn:
+        // rate_limit:forgot:user@email.com)
+        String redisKey = "rate_limit:forgot:" + email;
+
+        // Bu key Redis'te var mı diye bakıyoruz
+        String existingRequest = redisTemplate.opsForValue().get(redisKey);
+        if (existingRequest != null) {
+            throw new RuntimeException(
+                    "Çok sık şifre sıfırlama isteği gönderdiniz. Lütfen 2 dakika sonra tekrar deneyin.");
+        }
+
+        // Kullanıcıyı veritabanında bulma ve token üretme işlemlerin...
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Bu e-posta adresine kayıtlı bir kullanıcı bulunamadı."));
 
-        // Güvenli, rastgele benzersiz bir token üret (UUID veya SecureRandom)
         String token = UUID.randomUUID().toString();
-
         user.setResetPasswordToken(token);
-        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15)); // 15 dakika geçerli
+        user.setResetPasswordTokenExpiry(LocalDateTime.now().plusMinutes(15));
         userRepository.save(user);
 
-        // E-postayı gönder
         emailService.sendPasswordResetEmail(user.getEmail(), token);
+
+        // 🔥 Redis'e bu e-posta için bir kilit atıyoruz ve süresini 2 dakika (120
+        // saniye) yapıyoruz
+        redisTemplate.opsForValue().set(redisKey, "LOCKED", Duration.ofMinutes(2));
     }
 
     @Transactional
